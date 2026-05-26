@@ -234,67 +234,7 @@ const CHARTS = {};
 let curEq = 'ALL';
 
 // ── CARGA EXCEL ─────────────────────────────────────────────────────────
-function loadExcel(input){
-  const file=input.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
-      // Buscar hoja con datos: 'Data', o la primera hoja con contenido
-    let ws = wb.Sheets['Data'];
-    if(!ws) {
-      // Buscar la hoja que tenga más filas (la que tiene los datos)
-      let maxRows = 0;
-      wb.SheetNames.forEach(name => {
-        const s = wb.Sheets[name];
-        const range = XLSX.utils.decode_range(s['!ref']||'A1:A1');
-        if(range.e.r > maxRows) { maxRows = range.e.r; ws = s; }
-      });
-    }
-      const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
-      const heads=raw[0].map(h=>h?String(h).trim():'');
-      const newRows=[];
-      // Detectar índices de columnas por nombre
-      const ci = name => heads.findIndex(h=>h.toLowerCase().includes(name.toLowerCase()));
-      const iMes=1, iSem=2, iTurno=3;
-      const iFmt=ci('forma');
-      const iLABini=ci('V.Ini LAB'), iLABfin=ci('V. Final LAB');
-      const iPASTini=ci('V.Ini PAST'), iPASTfin=ci('V. Final PAST');
-      const iBLAini=ci('V.Ini BLANDA'), iBLAfin=ci('V. Final BLANDA');
-      const iLACini=ci('V.Ini LAC'), iLACfin=ci('V. Final LAC');
-      const iBBini=ci('V.Ini BB'), iBBfin=ci('V. Final BB');
-      for(let i=1;i<raw.length;i++){
-        const r=raw[i]; if(!r[0]) continue;
-        let fecha = r[0];
-        if(!fecha) continue;
-        if(typeof fecha === 'number') fecha = new Date((fecha-25569)*86400000);
-        if(!(fecha instanceof Date) || isNaN(fecha.getTime())) continue;
-        const pad=n=>String(n).padStart(2,'0');
-        const fs=`${fecha.getFullYear()}-${pad(fecha.getMonth()+1)}-${pad(fecha.getDate())}`;
-        const c=(a,b)=>(a!=null&&b!=null&&b>=a)?Math.round(b-a):0;
-        const row={fecha:fs,mes:((r[iMes]||'')+'').trim().replace(/^./,c=>c.toUpperCase()),sem:r[iSem]||0,turno:r[iTurno]||'',
-          formato:iFmt>=0?(r[iFmt]||''):'',
-          LAB:c(iLABini>=0?r[iLABini]:null,iLABfin>=0?r[iLABfin]:null),
-          PAST:c(iPASTini>=0?r[iPASTini]:null,iPASTfin>=0?r[iPASTfin]:null),
-          BLANDA:c(iBLAini>=0?r[iBLAini]:null,iBLAfin>=0?r[iBLAfin]:null),
-          LAC:c(iLACini>=0?r[iLACini]:null,iLACfin>=0?r[iLACfin]:null),
-          BBVac:c(iBBini>=0?r[iBBini]:null,iBBfin>=0?r[iBBfin]:null)};
-        row.total=row.LAB+row.PAST+row.BLANDA+row.LAC+row.BBVac;
-        if(row.total>0) newRows.push(row);
-      }
-      RAW=newRows;
-      // Mostrar fecha del último dato (igual en todas las PCs)
-      const fechas = newRows.map(r=>r.fecha).sort();
-      const ultimaFecha = fechas[fechas.length-1] || '';
-      const primeraFecha = fechas[0] || '';
-      const st=`📅 <b style="color:#6BBF00">${primeraFecha}</b> → <b style="color:#6BBF00">${ultimaFecha}</b> &nbsp;|&nbsp; ${RAW.length} reg.`;
-      document.getElementById('refreshStatus').innerHTML=st;
-      document.getElementById('refreshStatus2').innerHTML=st;
-      populateFormatos(); populateSemanas(); render();
-    }catch(err){alert('Error al leer Excel: '+err);}
-  };
-  reader.readAsArrayBuffer(file);
-}
+
 
 // ── FILTROS ──────────────────────────────────────────────────────────────
 function gf(){
@@ -337,19 +277,31 @@ function resetFiltros(){
   ['fMes','fSem','fTurno','fFmt','fEq'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fDesde').value='2026-01-01';
   document.getElementById('fHasta').value='2026-05-31';
-  populateSemanas(); populateFormatos();
-// Mostrar rango de fechas de los datos cargados
-(function(){
-  if(RAW.length > 0){
-    const fechas = RAW.map(r=>r.fecha).sort();
-    const st = `📅 <b style="color:#6BBF00">${fechas[0]}</b> → <b style="color:#6BBF00">${fechas[fechas.length-1]}</b> &nbsp;|&nbsp; ${RAW.length} reg.`;
-    const s1 = document.getElementById('refreshStatus');
-    const s2 = document.getElementById('refreshStatus2');
-    if(s1) s1.innerHTML = st;
-    if(s2) s2.innerHTML = st;
-  }
+  // ── INIT ──────────────────────────────────────────────────────────────────
+function updateStatus(){
+  const fechas = RAW.map(r=>r.fecha).sort();
+  const st = RAW.length > 0
+    ? `📅 <b style="color:#6BBF00">${fechas[0]}</b> → <b style="color:#6BBF00">${fechas[fechas.length-1]}</b> &nbsp;|&nbsp; ${RAW.length} reg.`
+    : 'Sin datos — carga el Excel para actualizar';
+  const s1 = document.getElementById('refreshStatus');
+  const s2 = document.getElementById('refreshStatus2');
+  if(s1) s1.innerHTML = st;
+  if(s2) s2.innerHTML = st;
+}
+
+(async function(){
+  try {
+    const saved = await window.storage.get('agua_raw', true);
+    if(saved && saved.value){
+      const parsed = JSON.parse(saved.value);
+      if(parsed && parsed.length > 0){ RAW = parsed; }
+    }
+  } catch(e){}
+  updateStatus();
+  populateFormatos();
+  populateSemanas();
+  render();
 })();
-render();
 }
 function selTab(el,eq){
   document.querySelectorAll('.eq-tab').forEach(t=>t.classList.remove('active'));
