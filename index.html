@@ -363,19 +363,22 @@ async function jbinWrite(data, lastFecha){
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 (async function(){
+  // Show loading state
+  const s1 = document.getElementById('refreshStatus');
+  const s2 = document.getElementById('refreshStatus2');
+  if(s1) s1.innerHTML = '🔄 Cargando datos...';
+  if(s2) s2.innerHTML = '🔄 Cargando datos...';
+
+  // Try to load from JSONBin FIRST before rendering
+  const saved = await jbinRead();
+  if(saved && saved.data && saved.data.length > 0){
+    RAW = saved.data;
+  }
+  // Now render with whatever data we have (JSONBin or hardcoded)
   updateStatus();
   populateFormatos();
   populateSemanas();
   render();
-  // Load from JSONBin in background
-  const saved = await jbinRead();
-  if(saved && saved.data && saved.data.length > 0){
-    RAW = saved.data;
-    updateStatus();
-    populateFormatos();
-    populateSemanas();
-    render();
-  }
 })();
 
 function selTab(el,eq){
