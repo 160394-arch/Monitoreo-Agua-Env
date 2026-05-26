@@ -307,10 +307,9 @@ function loadExcel(input){
 
       if(parsed.length > 0){
         RAW = parsed;
-        try { 
-          await window.storage.set('agua_raw', JSON.stringify(RAW), true);
-          await window.storage.set('agua_uploaded_at', new Date().toISOString(), true);
-        } catch(e){}
+        // Save to JSONBin so all users see the same data
+        const lastFecha = [...RAW].map(r=>r.fecha).sort().pop() || '';
+        await jbinWrite(RAW, lastFecha);
         updateStatus();
         populateSemanas();
         populateFormatos();
@@ -337,22 +336,46 @@ function updateStatus(){
   if(s2) s2.innerHTML = st;
 }
 
+// ── JSONBIN CONFIG ────────────────────────────────────────────────────────
+const JBIN_ID  = '6a15f57d3f632058588a07cd';
+const JBIN_KEY = '$2a$10$QHNbykL8Yh6x96oRFSWC6u0mwZnooaWsyGpGl1JPKfGfH5ZLpK8P2';
+const JBIN_URL = `https://api.jsonbin.io/v3/b/${JBIN_ID}`;
+
+async function jbinRead(){
+  try {
+    const r = await fetch(JBIN_URL+'/latest', {
+      headers:{'X-Master-Key': JBIN_KEY, 'X-Bin-Meta': 'false'}
+    });
+    if(!r.ok) return null;
+    return await r.json();
+  } catch(e){ return null; }
+}
+
+async function jbinWrite(data, lastFecha){
+  try {
+    await fetch(JBIN_URL, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key': JBIN_KEY},
+      body: JSON.stringify({data, uploaded_at: new Date().toISOString(), last_fecha: lastFecha})
+    });
+  } catch(e){}
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────────
 (async function(){
-  try {
-    // Check if someone manually uploaded an Excel (has upload timestamp)
-    const uploadedAt = await window.storage.get('agua_uploaded_at', true);
-    const saved = await window.storage.get('agua_raw', true);
-    if(uploadedAt && saved && saved.value){
-      // Someone uploaded manually — always use that data
-      const parsed = JSON.parse(saved.value);
-      if(parsed && parsed.length > 0){ RAW = parsed; }
-    }
-  } catch(e){}
   updateStatus();
   populateFormatos();
   populateSemanas();
   render();
+  // Load from JSONBin in background
+  const saved = await jbinRead();
+  if(saved && saved.data && saved.data.length > 0){
+    RAW = saved.data;
+    updateStatus();
+    populateFormatos();
+    populateSemanas();
+    render();
+  }
 })();
 
 function selTab(el,eq){
