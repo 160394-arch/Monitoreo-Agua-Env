@@ -277,7 +277,69 @@ function resetFiltros(){
   ['fMes','fSem','fTurno','fFmt','fEq'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fDesde').value='2026-01-01';
   document.getElementById('fHasta').value='2026-05-31';
-  // ── INIT ──────────────────────────────────────────────────────────────────
+  render();
+}
+
+// ── CARGA EXCEL ──────────────────────────────────────────────────────────
+function loadExcel(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(e){
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array', cellDates:true});
+      const sheetName = wb.SheetNames.find(n=>n==='Data') || wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, {cellDates:true, raw:false});
+      const ci = h => h ? h.trim().toLowerCase() : '';
+      const parsed = [];
+      for(const r of rows){
+        const keys = Object.keys(r);
+        const fk  = keys.find(k=>ci(k)==='fecha');
+        const mk  = keys.find(k=>ci(k)==='mes');
+        const sk  = keys.find(k=>ci(k)==='sem');
+        const tk  = keys.find(k=>ci(k)==='turno');
+        const fmk = keys.find(k=>ci(k)==='formato');
+        if(!fk || !r[fk]) continue;
+        let fv = r[fk];
+        if(fv instanceof Date){
+          const y=fv.getFullYear(), mo=String(fv.getMonth()+1).padStart(2,'0'), d=String(fv.getDate()).padStart(2,'0');
+          fv=`${y}-${mo}-${d}`;
+        } else {
+          fv = String(fv).trim();
+          if(fv.includes('/')) { const p=fv.split('/'); fv=`${p[2]||''}-${(p[1]||'').padStart(2,'0')}-${(p[0]||'').padStart(2,'0')}`; }
+        }
+        const g = name => {
+          const key = keys.find(k => k.trim() === name || k.trim() === name.replace('M.','M. '));
+          return key ? parseFloat(r[key]) || 0 : 0;
+        };
+        const mes    = mk  ? String(r[mk]).trim().replace(/^./, c=>c.toUpperCase()) : '';
+        const sem    = sk  ? parseInt(r[sk]) || 0 : 0;
+        const turno  = tk  ? String(r[tk]).trim() : '';
+        const fmt    = fmk ? String(r[fmk]).trim() : '';
+        const lab    = g('M.LAB');
+        const past   = g('M.PAST');
+        const blanda = g('M.BLANDA');
+        const lac    = g('M.LAC');
+        const bbvac  = g('M.BBVac');
+        const total  = lab + past + blanda + lac + bbvac;
+        if(total === 0) continue;
+        parsed.push({fecha:fv, mes, sem, turno, formato:fmt, LAB:lab, PAST:past, BLANDA:blanda, LAC:lac, BBVac:bbvac, total});
+      }
+      if(parsed.length > 0){
+        RAW = parsed;
+        try { await window.storage.set('agua_raw', JSON.stringify(RAW), true); } catch(e){}
+        updateStatus();
+        populateSemanas(); populateFormatos();
+        render();
+      } else {
+        alert('No se encontraron datos. Verifica que el archivo sea el Excel correcto con hoja "Data".');
+      }
+    } catch(err){ alert('Error al leer el archivo: ' + err.message); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── STATUS ────────────────────────────────────────────────────────────────
 function updateStatus(){
   const fechas = RAW.map(r=>r.fecha).sort();
   const st = RAW.length > 0
@@ -289,6 +351,7 @@ function updateStatus(){
   if(s2) s2.innerHTML = st;
 }
 
+// ── INIT ──────────────────────────────────────────────────────────────────
 (async function(){
   try {
     const saved = await window.storage.get('agua_raw', true);
@@ -302,7 +365,7 @@ function updateStatus(){
   populateSemanas();
   render();
 })();
-}
+
 function selTab(el,eq){
   document.querySelectorAll('.eq-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active'); curEq=eq; render();
@@ -729,8 +792,7 @@ function buildPlanEq(eq,col,name,totalEq,totalG,porT,topT,topDia){
   </div>`).join('');
 }
 
-// ── INIT ────────────────────────────────────────────────────────────────
-render();
+// (render is called by the async IIFE above)
 </script>
 </body>
 </html>
