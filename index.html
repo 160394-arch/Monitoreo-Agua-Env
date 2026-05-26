@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Consumo de Agua – Envasado</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#030C18;--bg1:#061120;--bg2:#0A1A2E;--bg3:#0F2040;
+  --blue:#1F6FEB;--green:#6BBF00;--yellow:#E3B341;--red:#F85149;--teal:#39C5BB;
+  --txt:#E6EDF3;--txt2:#8B949E;--txt3:#3D5068;--border:#1C2E40;
+  --lab:#6E2630;--past:#0074AA;--blanda:#FFB800;--lac:#800080;--bbvac:#166866;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg0);color:var(--txt);font-family:'Barlow',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* ── HEADER ROW 1 ── */
+.hdr{background:linear-gradient(135deg,#040E1C,#061726 50%,#040E1C);
+  border-bottom:1px solid var(--border);
+  display:flex;flex-direction:column;padding:5px 18px 4px;
+  position:sticky;top:0;z-index:100;box-shadow:0 4px 24px #00000050;}
+.hdr-r1{display:flex;align-items:center;gap:12px;flex-wrap:nowrap;padding-bottom:5px;}
+.hdr-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.hdr-ico{width:36px;height:36px;background:linear-gradient(135deg,#1F6FEB,#39C5BB);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.hdr-title h1{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;letter-spacing:2px;text-transform:uppercase;}
+.hdr-title p{font-size:8px;color:var(--teal);letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.sep{width:1px;height:30px;background:var(--border);flex-shrink:0;}
+.btn-dl{cursor:pointer;background:#0C1320;border:1px solid #238636;color:#6BBF00;
+  font-family:'JetBrains Mono',monospace;font-size:9px;padding:4px 10px;border-radius:4px;
+  display:flex;align-items:center;gap:4px;text-decoration:none;white-space:nowrap;font-weight:700;transition:all .15s;}
+.btn-dl:hover{background:#1a2f1a;}
+.btn-ul{cursor:pointer;background:#0C1320;border:1px solid #1C4E7A;color:#58A6FF;
+  font-family:'JetBrains Mono',monospace;font-size:9px;padding:4px 10px;border-radius:4px;
+  display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:700;transition:all .15s;}
+.btn-ul:hover{background:#0d1f33;}
+#refreshStatus{font-size:8px;font-family:'JetBrains Mono',monospace;color:#8B949E;
+  padding:3px 8px;background:var(--bg3);border:1px solid #1F6FEB40;border-radius:4px;white-space:nowrap;}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* ── HEADER ROW 2: FILTROS FULL WIDTH ── */
+.hdr-r2{display:flex;align-items:flex-end;gap:6px;width:100%;padding-top:4px;border-top:1px solid var(--border);}
+.fg{display:flex;flex-direction:column;gap:3px;flex:1;min-width:80px;}
+.fg label{font-size:8px;color:var(--txt2);letter-spacing:1px;text-transform:uppercase;
+  font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:4px;}
+.fg select,.fg input[type=date]{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--txt);
+  font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 8px;border-radius:5px;
+  outline:none;cursor:pointer;transition:border .15s;}
+.fg select:hover,.fg input:hover,.fg select:focus{border-color:var(--blue);}
+.btn-rst{flex-shrink:0;background:transparent;border:1px solid var(--border);color:var(--txt3);
+  font-family:'JetBrains Mono',monospace;font-size:9px;padding:4px 10px;border-radius:4px;
+  cursor:pointer;transition:all .15s;align-self:flex-end;}
+.btn-rst:hover{border-color:var(--red);color:var(--red);}
+
+/* ── TABS ── */
+.eq-tabs{display:flex;gap:4px;background:var(--bg1);padding:6px 18px;
+  border-bottom:1px solid var(--border);overflow-x:auto;}
+.eq-tab{padding:5px 14px;border-radius:6px;cursor:pointer;
+  font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;border:1px solid transparent;
+  transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:5px;}
+.eq-tab:hover{background:var(--bg3);}
+.eq-tab.active{border-color:currentColor;background:var(--bg3);}
+.eq-tab[data-eq="ALL"]{color:var(--txt2);}
+.eq-tab[data-eq="LAB"]{color:var(--lab);}
+.eq-tab[data-eq="PAST"]{color:var(--past);}
+.eq-tab[data-eq="BLANDA"]{color:var(--blanda);}
+.eq-tab[data-eq="LAC"]{color:var(--lac);}
+.eq-tab[data-eq="BBVac"]{color:var(--bbvac);}
+.eq-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+
+/* ── MAIN ── */
+.main{padding:12px 18px;display:flex;flex-direction:column;gap:12px;}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px;}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:7px;
+  padding:10px 12px;position:relative;overflow:hidden;transition:transform .15s;}
+.kpi:hover{transform:translateY(-1px);}
+.kpi::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent,var(--blue));}
+.kpi-label{font-size:7px;color:var(--txt3);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:4px;}
+.kpi-val{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--accent,var(--txt));line-height:1;}
+.kpi-unit{font-size:10px;color:var(--txt2);margin-left:2px;}
+.kpi-sub{font-size:8px;color:var(--txt3);margin-top:3px;font-family:'JetBrains Mono',monospace;}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:12px;}
+.chart-card.wide{grid-column:1/-1;}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.card-title{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt2);}
+.card-title::before{content:'│ ';color:var(--accent,var(--blue));}
+.card-note{font-size:8px;color:var(--txt3);font-family:'JetBrains Mono',monospace;}
+.chart-wrap{position:relative;height:210px;}
+.chart-wrap.tall{height:270px;}
+.chart-wrap.sm{height:175px;}
+.dc-center{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
+.dc-val{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--txt);line-height:1;}
+.dc-lbl{font-size:9px;color:var(--txt3);font-family:'JetBrains Mono',monospace;margin-top:3px;display:block;}
+table{width:100%;border-collapse:collapse;font-size:10px;}
+thead th{background:var(--bg3);color:var(--txt2);padding:5px 8px;text-align:left;
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+tbody tr:hover{background:var(--bg3);}
+tbody td{padding:4px 8px;font-family:'JetBrains Mono',monospace;font-size:9px;}
+.plan-card{background:linear-gradient(135deg,#0A1A2E,#061120);border:1px solid var(--border);border-radius:7px;padding:12px;}
+.plan-card.hero{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:28px 20px;min-height:240px;border:1px dashed #1A5C2E;}
+.plan-badge{width:48px;height:48px;background:transparent;border:2px solid var(--green);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--green);margin-bottom:12px;}
+.plan-hero-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;
+  letter-spacing:3px;text-transform:uppercase;color:var(--green);margin-bottom:8px;}
+.plan-hero-sub{font-size:11px;color:var(--txt2);margin-bottom:16px;line-height:1.5;}
+.plan-btn-hero{background:transparent;border:1px solid var(--green);color:var(--green);
+  font-family:'JetBrains Mono',monospace;font-size:10px;padding:8px 20px;border-radius:5px;
+  cursor:pointer;text-decoration:none;transition:all .2s;display:inline-flex;align-items:center;gap:6px;margin-bottom:12px;}
+.plan-btn-hero:hover{background:var(--green);color:#000;}
+.plan-footer{font-size:9px;color:var(--txt3);font-family:'JetBrains Mono',monospace;border:1px dashed #1A5C2E;
+  border-radius:4px;padding:4px 12px;}
+.plan-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.plan-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);}
+.plan-btn{background:transparent;border:1px solid var(--teal);color:var(--teal);
+  font-family:'JetBrains Mono',monospace;font-size:9px;padding:4px 10px;border-radius:4px;
+  cursor:pointer;text-decoration:none;transition:all .2s;display:inline-flex;align-items:center;gap:4px;}
+.plan-btn:hover{background:var(--teal);color:#000;}
+.plan-items{display:flex;flex-direction:column;gap:7px;}
+.plan-item{display:flex;gap:8px;padding:7px;background:var(--bg3);border-radius:5px;border-left:3px solid var(--accent,var(--blue));}
+.plan-ico{font-size:14px;flex-shrink:0;margin-top:1px;}
+.plan-text strong{display:block;font-size:10px;color:var(--txt);margin-bottom:2px;}
+.plan-text span{font-size:9px;color:var(--txt2);}
+.insight{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:10px;display:flex;gap:8px;}
+.ins-ico{font-size:16px;flex-shrink:0;}
+.ins-text strong{font-size:9px;color:var(--txt2);display:block;margin-bottom:2px;text-transform:uppercase;letter-spacing:1px;}
+.ins-text span{font-size:10px;color:var(--txt);}
+@media(max-width:900px){.charts-grid{grid-template-columns:1fr;}.chart-card.wide{grid-column:auto;}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <!-- FILA 1: Logo | Botones | Status -->
+  <div class="hdr-r1">
+    <div class="hdr-logo">
+      <div class="hdr-ico">💧</div>
+      <div class="hdr-title">
+        <h1>Control de Consumo de Agua</h1>
+        <p>Envasado Cusco · AB InBev · 2026</p>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <a class="btn-dl" href="https://anheuserbuschinbev.sharepoint.com/:x:/r/sites/pe/bo/pcuz/_layouts/15/Doc.aspx?sourcedoc=%7B3F2B7228-A017-4AC0-A81D-AC59C03E222D%7D&file=Consumo%20agua%20Envasado%202026.xlsx&action=default&mobileredirect=true" target="_blank">⬇ Descargar Excel</a>
+    <label class="btn-ul">📂 Cargar xlsx
+      <input type="file" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this)">
+    </label>
+    <span id="refreshStatus">Sin datos — carga el Excel para actualizar</span>
+    <div style="margin-left:auto;font-size:9px;font-family:'JetBrains Mono',monospace;color:#8B949E;flex-shrink:0;">
+      <span class="ldot"></span>ACTIVO
+    </div>
+  </div>
+  <!-- FILA 2: FILTROS FULL WIDTH -->
+  <div class="hdr-r2">
+    <div class="fg">
+      <label>Desde</label>
+      <input type="date" id="fDesde" value="2026-01-01">
+    </div>
+    <div class="fg">
+      <label>Hasta</label>
+      <input type="date" id="fHasta" value="2026-05-31">
+    </div>
+    <div class="fg">
+      <label>Mes</label>
+      <select id="fMes"><option value="">Todos</option>
+        <option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option><option>Mayo</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>Semana</label>
+      <select id="fSem"><option value="">Todas</option></select>
+    </div>
+    <div class="fg">
+      <label>Formato</label>
+      <select id="fFmt"><option value="">Todos</option></select>
+    </div>
+    <div class="fg">
+      <label>Equipo</label>
+      <select id="fEq"><option value="">Todos</option>
+        <option value="LAB">Lav. Botellas</option>
+        <option value="PAST">Pasteurizador</option>
+        <option value="BLANDA">Agua Blanda</option>
+        <option value="LAC">Lav. Cajas</option>
+        <option value="BBVac">Bomba Vacío</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>Turno</label>
+      <select id="fTurno"><option value="">Todos</option><option>T1</option><option>T2</option><option>T3</option></select>
+    </div>
+    <button class="btn-rst" onclick="resetFiltros()">↺ Limpiar</button>
+    <span id="refreshStatus2" style="margin-left:auto;font-size:8px;font-family:'JetBrains Mono',monospace;color:#8B949E;padding:3px 10px;background:var(--bg3);border:1px solid #1F6FEB40;border-radius:4px;flex-shrink:0;white-space:nowrap;"></span>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="eq-tabs">
+  <div class="eq-tab active" data-eq="ALL" onclick="selTab(this,'ALL')"><div class="eq-dot" style="background:#8B949E"></div>General</div>
+  <div class="eq-tab" data-eq="LAB"    onclick="selTab(this,'LAB')"><div class="eq-dot"></div>Lav. Botellas</div>
+  <div class="eq-tab" data-eq="PAST"   onclick="selTab(this,'PAST')"><div class="eq-dot"></div>Pasteurizador</div>
+  <div class="eq-tab" data-eq="BLANDA" onclick="selTab(this,'BLANDA')"><div class="eq-dot"></div>Agua Blanda</div>
+  <div class="eq-tab" data-eq="LAC"    onclick="selTab(this,'LAC')"><div class="eq-dot"></div>Lav. Cajas</div>
+  <div class="eq-tab" data-eq="BBVac"  onclick="selTab(this,'BBVac')"><div class="eq-dot"></div>Bomba Vacío</div>
+</div>
+
+<main class="main" id="main"></main>
+
+<script>
+// ── DATOS ──────────────────────────────────────────────────────────────
+let RAW = [{"fecha": "2026-01-02", "mes": "Enero", "sem": 1, "turno": "T1", "formato": "PC - 620", "LAB": 3, "PAST": 3, "BLANDA": 24, "LAC": 0, "BBVac": 0, "total": 30}, {"fecha": "2026-01-02", "mes": "Enero", "sem": 1, "turno": "T2", "formato": "PC - 620", "LAB": 0, "PAST": 4, "BLANDA": 45, "LAC": 5, "BBVac": 0, "total": 54}, {"fecha": "2026-01-02", "mes": "Enero", "sem": 1, "turno": "T3", "formato": "PC - 620", "LAB": 5, "PAST": 5, "BLANDA": 45, "LAC": 4, "BBVac": 0, "total": 59}, {"fecha": "2026-01-03", "mes": "Enero", "sem": 1, "turno": "T1", "formato": "PC - 620", "LAB": 3, "PAST": 5, "BLANDA": 36, "LAC": 2, "BBVac": 0, "total": 46}, {"fecha": "2026-01-04", "mes": "Enero", "sem": 2, "turno": "T3", "formato": "CT - 630", "LAB": 3, "PAST": 24, "BLANDA": 29, "LAC": 3, "BBVac": 0, "total": 59}, {"fecha": "2026-01-05", "mes": "Enero", "sem": 2, "turno": "T1", "formato": "CT - 630", "LAB": 5, "PAST": 14, "BLANDA": 44, "LAC": 0, "BBVac": 0, "total": 63}, {"fecha": "2026-01-05", "mes": "Enero", "sem": 2, "turno": "T2", "formato": "CT - 630", "LAB": 4, "PAST": 12, "BLANDA": 48, "LAC": 0, "BBVac": 0, "total": 64}, {"fecha": "2026-01-05", "mes": "Enero", "sem": 2, "turno": "T3", "formato": "CT - 630", "LAB": 4, "PAST": 13, "BLANDA": 40, "LAC": 0, "BBVac": 0, "total": 57}, {"fecha": "2026-01-06", "mes": "Enero", "sem": 2, "turno": "T1", "formato": "CT - 630", "LAB": 14, "PAST": 34, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 79}, {"fecha": "2026-01-06", "mes": "Enero", "sem": 2, "turno": "T2", "formato": "CT - 630", "LAB": 4, "PAST": 15, "BLANDA": 45, "LAC": 1, "BBVac": 0, "total": 65}, {"fecha": "2026-01-06", "mes": "Enero", "sem": 2, "turno": "T3", "formato": "CT - 630", "LAB": 4, "PAST": 12, "BLANDA": 44, "LAC": 0, "BBVac": 0, "total": 60}, {"fecha": "2026-01-07", "mes": "Enero", "sem": 2, "turno": "T1", "formato": "CT - 630", "LAB": 6, "PAST": 14, "BLANDA": 48, "LAC": 0, "BBVac": 0, "total": 68}, {"fecha": "2026-01-07", "mes": "Enero", "sem": 2, "turno": "T2", "formato": "CT - 630", "LAB": 3, "PAST": 14, "BLANDA": 44, "LAC": 0, "BBVac": 0, "total": 61}, {"fecha": "2026-01-07", "mes": "Enero", "sem": 2, "turno": "T3", "formato": "CT - 630", "LAB": 4, "PAST": 12, "BLANDA": 35, "LAC": 0, "BBVac": 0, "total": 51}, {"fecha": "2026-01-08", "mes": "Enero", "sem": 2, "turno": "T1", "formato": "CT - 630", "LAB": 4, "PAST": 13, "BLANDA": 39, "LAC": 2, "BBVac": 0, "total": 58}, {"fecha": "2026-01-08", "mes": "Enero", "sem": 2, "turno": "T2", "formato": "CT - 630", "LAB": 3, "PAST": 13, "BLANDA": 42, "LAC": 1, "BBVac": 0, "total": 59}, {"fecha": "2026-01-08", "mes": "Enero", "sem": 2, "turno": "T3", "formato": "", "LAB": 4, "PAST": 11, "BLANDA": 41, "LAC": 1, "BBVac": 0, "total": 57}, {"fecha": "2026-01-09", "mes": "Enero", "sem": 2, "turno": "T1", "formato": "", "LAB": 9, "PAST": 12, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 52}, {"fecha": "2026-01-09", "mes": "Enero", "sem": 2, "turno": "T2", "formato": "", "LAB": 4, "PAST": 11, "BLANDA": 46, "LAC": 0, "BBVac": 0, "total": 61}, {"fecha": "2026-01-09", "mes": "Enero", "sem": 2, "turno": "T3", "formato": "", "LAB": 4, "PAST": 12, "BLANDA": 42, "LAC": 0, "BBVac": 0, "total": 58}, {"fecha": "2026-01-10", "mes": "Enero", "sem": 2, "turno": "T1", "formato": "", "LAB": 0, "PAST": 0, "BLANDA": 4, "LAC": 0, "BBVac": 0, "total": 4}, {"fecha": "2026-01-12", "mes": "Enero", "sem": 3, "turno": "T1", "formato": "", "LAB": 0, "PAST": 0, "BLANDA": 3, "LAC": 0, "BBVac": 0, "total": 3}, {"fecha": "2026-01-12", "mes": "Enero", "sem": 3, "turno": "T2", "formato": "", "LAB": 36, "PAST": 24, "BLANDA": 9, "LAC": 0, "BBVac": 0, "total": 69}, {"fecha": "2026-01-12", "mes": "Enero", "sem": 3, "turno": "T3", "formato": "", "LAB": 5, "PAST": 2, "BLANDA": 45, "LAC": 0, "BBVac": 0, "total": 52}, {"fecha": "2026-01-13", "mes": "Enero", "sem": 3, "turno": "T1", "formato": "", "LAB": 1, "PAST": 2, "BLANDA": 48, "LAC": 0, "BBVac": 0, "total": 51}, {"fecha": "2026-01-13", "mes": "Enero", "sem": 3, "turno": "T2", "formato": "", "LAB": 4, "PAST": 2, "BLANDA": 38, "LAC": 0, "BBVac": 0, "total": 44}, {"fecha": "2026-01-13", "mes": "Enero", "sem": 3, "turno": "T3", "formato": "", "LAB": 3, "PAST": 2, "BLANDA": 44, "LAC": 0, "BBVac": 0, "total": 49}, {"fecha": "2026-01-14", "mes": "Enero", "sem": 3, "turno": "T1", "formato": "", "LAB": 17, "PAST": 20, "BLANDA": 33, "LAC": 0, "BBVac": 0, "total": 70}, {"fecha": "2026-01-14", "mes": "Enero", "sem": 3, "turno": "T2", "formato": "", "LAB": 11, "PAST": 2, "BLANDA": 26, "LAC": 1, "BBVac": 0, "total": 40}, {"fecha": "2026-01-14", "mes": "Enero", "sem": 3, "turno": "T3", "formato": "", "LAB": 26, "PAST": 1, "BLANDA": 29, "LAC": 0, "BBVac": 0, "total": 56}, {"fecha": "2026-01-15", "mes": "Enero", "sem": 3, "turno": "T1", "formato": "", "LAB": 12, "PAST": 2, "BLANDA": 20, "LAC": 0, "BBVac": 0, "total": 34}, {"fecha": "2026-01-15", "mes": "Enero", "sem": 3, "turno": "T2", "formato": "", "LAB": 15, "PAST": 2, "BLANDA": 30, "LAC": 0, "BBVac": 0, "total": 47}, {"fecha": "2026-01-15", "mes": "Enero", "sem": 3, "turno": "T3", "formato": "", "LAB": 15, "PAST": 3, "BLANDA": 23, "LAC": 1, "BBVac": 0, "total": 42}, {"fecha": "2026-01-16", "mes": "Enero", "sem": 3, "turno": "T1", "formato": "", "LAB": 19, "PAST": 2, "BLANDA": 30, "LAC": 4, "BBVac": 0, "total": 55}, {"fecha": "2026-01-16", "mes": "Enero", "sem": 3, "turno": "T2", "formato": "", "LAB": 17, "PAST": 3, "BLANDA": 27, "LAC": 2, "BBVac": 0, "total": 49}, {"fecha": "2026-01-16", "mes": "Enero", "sem": 3, "turno": "T3", "formato": "", "LAB": 21, "PAST": 2, "BLANDA": 29, "LAC": 2, "BBVac": 0, "total": 54}, {"fecha": "2026-01-17", "mes": "Enero", "sem": 3, "turno": "T1", "formato": "", "LAB": 2, "PAST": 0, "BLANDA": 5, "LAC": 1, "BBVac": 0, "total": 8}, {"fecha": "2026-01-19", "mes": "Enero", "sem": 4, "turno": "T2", "formato": "", "LAB": 12, "PAST": 8, "BLANDA": 20, "LAC": 0, "BBVac": 0, "total": 40}, {"fecha": "2026-01-19", "mes": "Enero", "sem": 4, "turno": "T3", "formato": "", "LAB": 23, "PAST": 4, "BLANDA": 37, "LAC": 0, "BBVac": 0, "total": 64}, {"fecha": "2026-01-20", "mes": "Enero", "sem": 4, "turno": "T1", "formato": "", "LAB": 23, "PAST": 3, "BLANDA": 25, "LAC": 0, "BBVac": 0, "total": 51}, {"fecha": "2026-01-20", "mes": "Enero", "sem": 4, "turno": "T2", "formato": "", "LAB": 4, "PAST": 3, "BLANDA": 52, "LAC": 0, "BBVac": 0, "total": 59}, {"fecha": "2026-01-20", "mes": "Enero", "sem": 4, "turno": "T3", "formato": "", "LAB": 1, "PAST": 3, "BLANDA": 61, "LAC": 0, "BBVac": 0, "total": 65}, {"fecha": "2026-01-21", "mes": "Enero", "sem": 4, "turno": "T1", "formato": "", "LAB": 4, "PAST": 3, "BLANDA": 61, "LAC": 0, "BBVac": 0, "total": 68}, {"fecha": "2026-01-21", "mes": "Enero", "sem": 4, "turno": "T2", "formato": "", "LAB": 3, "PAST": 2, "BLANDA": 44, "LAC": 0, "BBVac": 0, "total": 49}, {"fecha": "2026-01-21", "mes": "Enero", "sem": 4, "turno": "T3", "formato": "", "LAB": 13, "PAST": 2, "BLANDA": 29, "LAC": 0, "BBVac": 0, "total": 44}, {"fecha": "2026-01-22", "mes": "Enero", "sem": 4, "turno": "T1", "formato": "", "LAB": 3, "PAST": 2, "BLANDA": 52, "LAC": 1, "BBVac": 0, "total": 58}, {"fecha": "2026-01-22", "mes": "Enero", "sem": 4, "turno": "T2", "formato": "", "LAB": 4, "PAST": 3, "BLANDA": 58, "LAC": 0, "BBVac": 0, "total": 65}, {"fecha": "2026-01-22", "mes": "Enero", "sem": 4, "turno": "T3", "formato": "", "LAB": 4, "PAST": 2, "BLANDA": 53, "LAC": 0, "BBVac": 0, "total": 59}, {"fecha": "2026-01-23", "mes": "Enero", "sem": 4, "turno": "T1", "formato": "", "LAB": 3, "PAST": 2, "BLANDA": 53, "LAC": 0, "BBVac": 0, "total": 58}, {"fecha": "2026-01-23", "mes": "Enero", "sem": 4, "turno": "T2", "formato": "", "LAB": 3, "PAST": 2, "BLANDA": 40, "LAC": 0, "BBVac": 0, "total": 45}, {"fecha": "2026-01-23", "mes": "Enero", "sem": 4, "turno": "T3", "formato": "", "LAB": 3, "PAST": 1, "BLANDA": 44, "LAC": 0, "BBVac": 0, "total": 48}, {"fecha": "2026-01-24", "mes": "Enero", "sem": 4, "turno": "T1", "formato": "", "LAB": 3, "PAST": 1, "BLANDA": 42, "LAC": 0, "BBVac": 0, "total": 46}, {"fecha": "2026-01-24", "mes": "Enero", "sem": 4, "turno": "T2", "formato": "", "LAB": 2, "PAST": 1, "BLANDA": 27, "LAC": 0, "BBVac": 0, "total": 30}, {"fecha": "2026-01-26", "mes": "Enero", "sem": 5, "turno": "T1", "formato": "", "LAB": 13, "PAST": 6, "BLANDA": 24, "LAC": 1, "BBVac": 0, "total": 44}, {"fecha": "2026-01-26", "mes": "Enero", "sem": 5, "turno": "T2", "formato": "", "LAB": 4, "PAST": 3, "BLANDA": 50, "LAC": 0, "BBVac": 0, "total": 57}, {"fecha": "2026-01-26", "mes": "Enero", "sem": 5, "turno": "T3", "formato": "", "LAB": 2, "PAST": 3, "BLANDA": 38, "LAC": 0, "BBVac": 0, "total": 43}, {"fecha": "2026-01-27", "mes": "Enero", "sem": 5, "turno": "T1", "formato": "", "LAB": 5, "PAST": 4, "BLANDA": 40, "LAC": 0, "BBVac": 0, "total": 49}, {"fecha": "2026-01-27", "mes": "Enero", "sem": 5, "turno": "T2", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 38, "LAC": 0, "BBVac": 0, "total": 40}, {"fecha": "2026-01-27", "mes": "Enero", "sem": 5, "turno": "T3", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 36, "LAC": 0, "BBVac": 0, "total": 39}, {"fecha": "2026-01-28", "mes": "Enero", "sem": 5, "turno": "T1", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 32, "LAC": 1, "BBVac": 0, "total": 35}, {"fecha": "2026-01-28", "mes": "Enero", "sem": 5, "turno": "T2", "formato": "", "LAB": 1, "PAST": 2, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 34}, {"fecha": "2026-01-28", "mes": "Enero", "sem": 5, "turno": "T3", "formato": "", "LAB": 14, "PAST": 21, "BLANDA": 36, "LAC": 0, "BBVac": 0, "total": 71}, {"fecha": "2026-01-29", "mes": "Enero", "sem": 5, "turno": "T1", "formato": "", "LAB": 3, "PAST": 4, "BLANDA": 41, "LAC": 1, "BBVac": 0, "total": 49}, {"fecha": "2026-01-29", "mes": "Enero", "sem": 5, "turno": "T2", "formato": "", "LAB": 3, "PAST": 3, "BLANDA": 43, "LAC": 0, "BBVac": 0, "total": 49}, {"fecha": "2026-01-29", "mes": "Enero", "sem": 5, "turno": "T3", "formato": "", "LAB": 3, "PAST": 3, "BLANDA": 30, "LAC": 0, "BBVac": 0, "total": 36}, {"fecha": "2026-01-30", "mes": "Enero", "sem": 5, "turno": "T1", "formato": "", "LAB": 2, "PAST": 4, "BLANDA": 30, "LAC": 1, "BBVac": 0, "total": 37}, {"fecha": "2026-01-30", "mes": "Enero", "sem": 5, "turno": "T2", "formato": "", "LAB": 3, "PAST": 3, "BLANDA": 46, "LAC": 0, "BBVac": 0, "total": 52}, {"fecha": "2026-01-30", "mes": "Enero", "sem": 5, "turno": "T3", "formato": "", "LAB": 3, "PAST": 1, "BLANDA": 43, "LAC": 0, "BBVac": 0, "total": 47}, {"fecha": "2026-01-31", "mes": "Enero", "sem": 5, "turno": "T1", "formato": "", "LAB": 4, "PAST": 2, "BLANDA": 40, "LAC": 0, "BBVac": 0, "total": 46}, {"fecha": "2026-01-31", "mes": "Enero", "sem": 5, "turno": "T2", "formato": "", "LAB": 3, "PAST": 1, "BLANDA": 35, "LAC": 0, "BBVac": 0, "total": 39}, {"fecha": "2026-02-01", "mes": "Febrero", "sem": 6, "turno": "T3", "formato": "", "LAB": 11, "PAST": 20, "BLANDA": 16, "LAC": 0, "BBVac": 0, "total": 47}, {"fecha": "2026-02-02", "mes": "Febrero", "sem": 6, "turno": "T1", "formato": "", "LAB": 3, "PAST": 3, "BLANDA": 30, "LAC": 0, "BBVac": 0, "total": 36}, {"fecha": "2026-02-02", "mes": "Febrero", "sem": 6, "turno": "T2", "formato": "", "LAB": 3, "PAST": 2, "BLANDA": 30, "LAC": 0, "BBVac": 0, "total": 35}, {"fecha": "2026-02-02", "mes": "Febrero", "sem": 6, "turno": "T3", "formato": "", "LAB": 4, "PAST": 3, "BLANDA": 42, "LAC": 0, "BBVac": 0, "total": 49}, {"fecha": "2026-02-03", "mes": "Febrero", "sem": 6, "turno": "T1", "formato": "", "LAB": 4, "PAST": 3, "BLANDA": 46, "LAC": 0, "BBVac": 0, "total": 53}, {"fecha": "2026-02-03", "mes": "Febrero", "sem": 6, "turno": "T2", "formato": "", "LAB": 5, "PAST": 2, "BLANDA": 48, "LAC": 0, "BBVac": 0, "total": 55}, {"fecha": "2026-02-03", "mes": "Febrero", "sem": 6, "turno": "T3", "formato": "", "LAB": 5, "PAST": 2, "BLANDA": 39, "LAC": 0, "BBVac": 0, "total": 46}, {"fecha": "2026-02-04", "mes": "Febrero", "sem": 6, "turno": "T1", "formato": "", "LAB": 5, "PAST": 2, "BLANDA": 40, "LAC": 0, "BBVac": 0, "total": 47}, {"fecha": "2026-02-04", "mes": "Febrero", "sem": 6, "turno": "T2", "formato": "", "LAB": 10, "PAST": 1, "BLANDA": 33, "LAC": 0, "BBVac": 0, "total": 44}, {"fecha": "2026-02-04", "mes": "Febrero", "sem": 6, "turno": "T3", "formato": "", "LAB": 21, "PAST": 24, "BLANDA": 24, "LAC": 0, "BBVac": 0, "total": 69}, {"fecha": "2026-02-05", "mes": "Febrero", "sem": 6, "turno": "T1", "formato": "", "LAB": 10, "PAST": 1, "BLANDA": 40, "LAC": 0, "BBVac": 0, "total": 51}, {"fecha": "2026-02-05", "mes": "Febrero", "sem": 6, "turno": "T2", "formato": "", "LAB": 11, "PAST": 2, "BLANDA": 34, "LAC": 0, "BBVac": 0, "total": 47}, {"fecha": "2026-02-05", "mes": "Febrero", "sem": 6, "turno": "T3", "formato": "", "LAB": 11, "PAST": 1, "BLANDA": 40, "LAC": 0, "BBVac": 0, "total": 52}, {"fecha": "2026-02-06", "mes": "Febrero", "sem": 6, "turno": "T1", "formato": "", "LAB": 0, "PAST": 1, "BLANDA": 48, "LAC": 0, "BBVac": 0, "total": 49}, {"fecha": "2026-02-06", "mes": "Febrero", "sem": 6, "turno": "T2", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 47, "LAC": 0, "BBVac": 0, "total": 49}, {"fecha": "2026-02-06", "mes": "Febrero", "sem": 6, "turno": "T3", "formato": "", "LAB": 0, "PAST": 1, "BLANDA": 52, "LAC": 2, "BBVac": 0, "total": 55}, {"fecha": "2026-02-07", "mes": "Febrero", "sem": 6, "turno": "T1", "formato": "", "LAB": 0, "PAST": 1, "BLANDA": 55, "LAC": 2, "BBVac": 0, "total": 58}, {"fecha": "2026-02-09", "mes": "Febrero", "sem": 7, "turno": "T2", "formato": "", "LAB": 21, "PAST": 4, "BLANDA": 17, "LAC": 2, "BBVac": 0, "total": 44}, {"fecha": "2026-02-09", "mes": "Febrero", "sem": 7, "turno": "T3", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 50, "LAC": 1, "BBVac": 0, "total": 55}, {"fecha": "2026-02-10", "mes": "Febrero", "sem": 7, "turno": "T1", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 45, "LAC": 2, "BBVac": 0, "total": 51}, {"fecha": "2026-02-10", "mes": "Febrero", "sem": 7, "turno": "T2", "formato": "", "LAB": 0, "PAST": 28, "BLANDA": 40, "LAC": 2, "BBVac": 0, "total": 70}, {"fecha": "2026-02-10", "mes": "Febrero", "sem": 7, "turno": "T3", "formato": "", "LAB": 0, "PAST": 5, "BLANDA": 49, "LAC": 2, "BBVac": 0, "total": 56}, {"fecha": "2026-02-11", "mes": "Febrero", "sem": 7, "turno": "T1", "formato": "", "LAB": 0, "PAST": 33, "BLANDA": 36, "LAC": 0, "BBVac": 0, "total": 69}, {"fecha": "2026-02-11", "mes": "Febrero", "sem": 7, "turno": "T2", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 52, "LAC": 0, "BBVac": 0, "total": 56}, {"fecha": "2026-02-11", "mes": "Febrero", "sem": 7, "turno": "T3", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 51, "LAC": 3, "BBVac": 0, "total": 57}, {"fecha": "2026-02-12", "mes": "Febrero", "sem": 7, "turno": "T1", "formato": "", "LAB": 0, "PAST": 7, "BLANDA": 48, "LAC": 1, "BBVac": 0, "total": 56}, {"fecha": "2026-02-12", "mes": "Febrero", "sem": 7, "turno": "T2", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 50, "LAC": 1, "BBVac": 0, "total": 54}, {"fecha": "2026-02-12", "mes": "Febrero", "sem": 7, "turno": "T3", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 43, "LAC": 1, "BBVac": 0, "total": 46}, {"fecha": "2026-02-13", "mes": "Febrero", "sem": 7, "turno": "T1", "formato": "", "LAB": 1, "PAST": 5, "BLANDA": 34, "LAC": 1, "BBVac": 0, "total": 41}, {"fecha": "2026-02-13", "mes": "Febrero", "sem": 7, "turno": "T2", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 45, "LAC": 0, "BBVac": 0, "total": 48}, {"fecha": "2026-02-13", "mes": "Febrero", "sem": 7, "turno": "T3", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 46, "LAC": 3, "BBVac": 0, "total": 53}, {"fecha": "2026-02-14", "mes": "Febrero", "sem": 7, "turno": "T1", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 41, "LAC": 0, "BBVac": 0, "total": 45}, {"fecha": "2026-02-16", "mes": "Febrero", "sem": 8, "turno": "T1", "formato": "", "LAB": 74, "PAST": 0, "BLANDA": 28, "LAC": 0, "BBVac": 0, "total": 102}, {"fecha": "2026-02-16", "mes": "Febrero", "sem": 8, "turno": "T2", "formato": "", "LAB": 20, "PAST": 37, "BLANDA": 11, "LAC": 0, "BBVac": 0, "total": 68}, {"fecha": "2026-02-16", "mes": "Febrero", "sem": 8, "turno": "T3", "formato": "", "LAB": 24, "PAST": 8, "BLANDA": 19, "LAC": 0, "BBVac": 0, "total": 51}, {"fecha": "2026-02-17", "mes": "Febrero", "sem": 8, "turno": "T1", "formato": "", "LAB": 3, "PAST": 7, "BLANDA": 44, "LAC": 0, "BBVac": 0, "total": 54}, {"fecha": "2026-02-17", "mes": "Febrero", "sem": 8, "turno": "T2", "formato": "", "LAB": 0, "PAST": 7, "BLANDA": 55, "LAC": 0, "BBVac": 0, "total": 62}, {"fecha": "2026-02-17", "mes": "Febrero", "sem": 8, "turno": "T3", "formato": "", "LAB": 0, "PAST": 9, "BLANDA": 52, "LAC": 0, "BBVac": 0, "total": 61}, {"fecha": "2026-02-18", "mes": "Febrero", "sem": 8, "turno": "T1", "formato": "", "LAB": 0, "PAST": 5, "BLANDA": 55, "LAC": 1, "BBVac": 0, "total": 61}, {"fecha": "2026-02-18", "mes": "Febrero", "sem": 8, "turno": "T2", "formato": "", "LAB": 0, "PAST": 8, "BLANDA": 34, "LAC": 0, "BBVac": 0, "total": 42}, {"fecha": "2026-02-18", "mes": "Febrero", "sem": 8, "turno": "T3", "formato": "", "LAB": 0, "PAST": 7, "BLANDA": 43, "LAC": 0, "BBVac": 0, "total": 50}, {"fecha": "2026-02-19", "mes": "Febrero", "sem": 8, "turno": "T1", "formato": "", "LAB": 0, "PAST": 5, "BLANDA": 36, "LAC": 0, "BBVac": 0, "total": 41}, {"fecha": "2026-02-19", "mes": "Febrero", "sem": 8, "turno": "T2", "formato": "", "LAB": 16, "PAST": 31, "BLANDA": 33, "LAC": 0, "BBVac": 0, "total": 80}, {"fecha": "2026-02-19", "mes": "Febrero", "sem": 8, "turno": "T3", "formato": "", "LAB": 0, "PAST": 6, "BLANDA": 38, "LAC": 0, "BBVac": 0, "total": 44}, {"fecha": "2026-02-20", "mes": "Febrero", "sem": 8, "turno": "T1", "formato": "", "LAB": 0, "PAST": 1, "BLANDA": 32, "LAC": 0, "BBVac": 0, "total": 33}, {"fecha": "2026-02-20", "mes": "Febrero", "sem": 8, "turno": "T2", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 44, "LAC": 0, "BBVac": 0, "total": 48}, {"fecha": "2026-02-20", "mes": "Febrero", "sem": 8, "turno": "T3", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 48, "LAC": 0, "BBVac": 0, "total": 52}, {"fecha": "2026-02-22", "mes": "Febrero", "sem": 9, "turno": "T3", "formato": "", "LAB": 0, "PAST": 0, "BLANDA": 44, "LAC": 0, "BBVac": 0, "total": 44}, {"fecha": "2026-02-23", "mes": "Febrero", "sem": 9, "turno": "T1", "formato": "", "LAB": 0, "PAST": 43, "BLANDA": 36, "LAC": 0, "BBVac": 0, "total": 79}, {"fecha": "2026-02-23", "mes": "Febrero", "sem": 9, "turno": "T2", "formato": "", "LAB": 0, "PAST": 6, "BLANDA": 45, "LAC": 0, "BBVac": 0, "total": 51}, {"fecha": "2026-02-23", "mes": "Febrero", "sem": 9, "turno": "T3", "formato": "", "LAB": 0, "PAST": 6, "BLANDA": 51, "LAC": 4, "BBVac": 0, "total": 61}, {"fecha": "2026-02-24", "mes": "Febrero", "sem": 9, "turno": "T1", "formato": "", "LAB": 0, "PAST": 9, "BLANDA": 44, "LAC": 2, "BBVac": 0, "total": 55}, {"fecha": "2026-02-24", "mes": "Febrero", "sem": 9, "turno": "T2", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 45, "LAC": 3, "BBVac": 0, "total": 52}, {"fecha": "2026-02-24", "mes": "Febrero", "sem": 9, "turno": "T3", "formato": "", "LAB": 12, "PAST": 15, "BLANDA": 36, "LAC": 3, "BBVac": 0, "total": 66}, {"fecha": "2026-02-25", "mes": "Febrero", "sem": 9, "turno": "T1", "formato": "", "LAB": 0, "PAST": 21, "BLANDA": 29, "LAC": 1, "BBVac": 0, "total": 51}, {"fecha": "2026-02-25", "mes": "Febrero", "sem": 9, "turno": "T2", "formato": "", "LAB": 1, "PAST": 4, "BLANDA": 51, "LAC": 1, "BBVac": 0, "total": 57}, {"fecha": "2026-02-25", "mes": "Febrero", "sem": 9, "turno": "T3", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 56, "LAC": 0, "BBVac": 0, "total": 58}, {"fecha": "2026-02-26", "mes": "Febrero", "sem": 9, "turno": "T1", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 42, "LAC": 0, "BBVac": 0, "total": 46}, {"fecha": "2026-02-26", "mes": "Febrero", "sem": 9, "turno": "T2", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 51, "LAC": 0, "BBVac": 0, "total": 54}, {"fecha": "2026-02-26", "mes": "Febrero", "sem": 9, "turno": "T3", "formato": "", "LAB": 11, "PAST": 32, "BLANDA": 24, "LAC": 1, "BBVac": 0, "total": 68}, {"fecha": "2026-02-27", "mes": "Febrero", "sem": 9, "turno": "T1", "formato": "", "LAB": 0, "PAST": 6, "BLANDA": 44, "LAC": 0, "BBVac": 0, "total": 50}, {"fecha": "2026-02-27", "mes": "Febrero", "sem": 9, "turno": "T2", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 45, "LAC": 0, "BBVac": 0, "total": 48}, {"fecha": "2026-02-27", "mes": "Febrero", "sem": 9, "turno": "T3", "formato": "", "LAB": 1, "PAST": 3, "BLANDA": 49, "LAC": 0, "BBVac": 0, "total": 53}, {"fecha": "2026-02-28", "mes": "Febrero", "sem": 9, "turno": "T1", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 42, "LAC": 0, "BBVac": 0, "total": 44}, {"fecha": "2026-03-02", "mes": "Marzo", "sem": 10, "turno": "T1", "formato": "", "LAB": 50, "PAST": 15, "BLANDA": 16, "LAC": 1, "BBVac": 0, "total": 82}, {"fecha": "2026-03-02", "mes": "Marzo", "sem": 10, "turno": "T2", "formato": "", "LAB": 0, "PAST": 26, "BLANDA": 25, "LAC": 0, "BBVac": 0, "total": 51}, {"fecha": "2026-03-02", "mes": "Marzo", "sem": 10, "turno": "T3", "formato": "", "LAB": 0, "PAST": 8, "BLANDA": 40, "LAC": 0, "BBVac": 0, "total": 48}, {"fecha": "2026-03-03", "mes": "Marzo", "sem": 10, "turno": "T1", "formato": "", "LAB": 0, "PAST": 8, "BLANDA": 30, "LAC": 0, "BBVac": 0, "total": 38}, {"fecha": "2026-03-03", "mes": "Marzo", "sem": 10, "turno": "T2", "formato": "", "LAB": 0, "PAST": 7, "BLANDA": 44, "LAC": 0, "BBVac": 0, "total": 51}, {"fecha": "2026-03-03", "mes": "Marzo", "sem": 10, "turno": "T3", "formato": "", "LAB": 0, "PAST": 6, "BLANDA": 40, "LAC": 0, "BBVac": 0, "total": 46}, {"fecha": "2026-03-04", "mes": "Marzo", "sem": 10, "turno": "T1", "formato": "", "LAB": 0, "PAST": 7, "BLANDA": 39, "LAC": 0, "BBVac": 0, "total": 46}, {"fecha": "2026-03-04", "mes": "Marzo", "sem": 10, "turno": "T2", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 42, "LAC": 0, "BBVac": 0, "total": 46}, {"fecha": "2026-03-04", "mes": "Marzo", "sem": 10, "turno": "T3", "formato": "", "LAB": 0, "PAST": 6, "BLANDA": 43, "LAC": 0, "BBVac": 0, "total": 49}, {"fecha": "2026-03-05", "mes": "Marzo", "sem": 10, "turno": "T1", "formato": "", "LAB": 12, "PAST": 35, "BLANDA": 25, "LAC": 1, "BBVac": 0, "total": 73}, {"fecha": "2026-03-05", "mes": "Marzo", "sem": 10, "turno": "T2", "formato": "", "LAB": 0, "PAST": 5, "BLANDA": 46, "LAC": 0, "BBVac": 0, "total": 51}, {"fecha": "2026-03-05", "mes": "Marzo", "sem": 10, "turno": "T3", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 44, "LAC": 0, "BBVac": 0, "total": 47}, {"fecha": "2026-03-06", "mes": "Marzo", "sem": 10, "turno": "T1", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 44, "LAC": 0, "BBVac": 0, "total": 48}, {"fecha": "2026-03-06", "mes": "Marzo", "sem": 10, "turno": "T2", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 48, "LAC": 0, "BBVac": 0, "total": 52}, {"fecha": "2026-03-06", "mes": "Marzo", "sem": 10, "turno": "T3", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 36, "LAC": 0, "BBVac": 0, "total": 40}, {"fecha": "2026-03-07", "mes": "Marzo", "sem": 10, "turno": "T1", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 37, "LAC": 1, "BBVac": 0, "total": 41}, {"fecha": "2026-03-09", "mes": "Marzo", "sem": 11, "turno": "T1", "formato": "", "LAB": 8, "PAST": 23, "BLANDA": 16, "LAC": 0, "BBVac": 0, "total": 47}, {"fecha": "2026-03-09", "mes": "Marzo", "sem": 11, "turno": "T2", "formato": "", "LAB": 28, "PAST": 9, "BLANDA": 6, "LAC": 0, "BBVac": 0, "total": 43}, {"fecha": "2026-03-09", "mes": "Marzo", "sem": 11, "turno": "T3", "formato": "", "LAB": 31, "PAST": 6, "BLANDA": 6, "LAC": 0, "BBVac": 0, "total": 43}, {"fecha": "2026-03-10", "mes": "Marzo", "sem": 11, "turno": "T1", "formato": "", "LAB": 5, "PAST": 4, "BLANDA": 44, "LAC": 0, "BBVac": 0, "total": 53}, {"fecha": "2026-03-10", "mes": "Marzo", "sem": 11, "turno": "T2", "formato": "", "LAB": 0, "PAST": 5, "BLANDA": 39, "LAC": 0, "BBVac": 0, "total": 44}, {"fecha": "2026-03-10", "mes": "Marzo", "sem": 11, "turno": "T3", "formato": "", "LAB": 0, "PAST": 6, "BLANDA": 33, "LAC": 0, "BBVac": 0, "total": 39}, {"fecha": "2026-03-11", "mes": "Marzo", "sem": 11, "turno": "T1", "formato": "", "LAB": 0, "PAST": 22, "BLANDA": 35, "LAC": 0, "BBVac": 0, "total": 57}, {"fecha": "2026-03-11", "mes": "Marzo", "sem": 11, "turno": "T2", "formato": "", "LAB": 11, "PAST": 23, "BLANDA": 36, "LAC": 1, "BBVac": 0, "total": 71}, {"fecha": "2026-03-11", "mes": "Marzo", "sem": 11, "turno": "T3", "formato": "", "LAB": 1, "PAST": 6, "BLANDA": 39, "LAC": 0, "BBVac": 0, "total": 46}, {"fecha": "2026-03-12", "mes": "Marzo", "sem": 11, "turno": "T1", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 42, "LAC": 0, "BBVac": 0, "total": 46}, {"fecha": "2026-03-12", "mes": "Marzo", "sem": 11, "turno": "T2", "formato": "", "LAB": 0, "PAST": 6, "BLANDA": 39, "LAC": 0, "BBVac": 0, "total": 45}, {"fecha": "2026-03-12", "mes": "Marzo", "sem": 11, "turno": "T3", "formato": "", "LAB": 0, "PAST": 5, "BLANDA": 39, "LAC": 0, "BBVac": 0, "total": 44}, {"fecha": "2026-03-13", "mes": "Marzo", "sem": 11, "turno": "T1", "formato": "", "LAB": 0, "PAST": 5, "BLANDA": 42, "LAC": 0, "BBVac": 0, "total": 47}, {"fecha": "2026-03-13", "mes": "Marzo", "sem": 11, "turno": "T2", "formato": "", "LAB": 0, "PAST": 6, "BLANDA": 42, "LAC": 0, "BBVac": 0, "total": 48}, {"fecha": "2026-03-13", "mes": "Marzo", "sem": 11, "turno": "T3", "formato": "", "LAB": 0, "PAST": 6, "BLANDA": 43, "LAC": 0, "BBVac": 0, "total": 49}, {"fecha": "2026-03-16", "mes": "Marzo", "sem": 12, "turno": "T1", "formato": "", "LAB": 45, "PAST": 40, "BLANDA": 2, "LAC": 0, "BBVac": 0, "total": 87}, {"fecha": "2026-03-16", "mes": "Marzo", "sem": 12, "turno": "T2", "formato": "", "LAB": 33, "PAST": 15, "BLANDA": 2, "LAC": 0, "BBVac": 0, "total": 50}, {"fecha": "2026-03-16", "mes": "Marzo", "sem": 12, "turno": "T3", "formato": "", "LAB": 5, "PAST": 7, "BLANDA": 27, "LAC": 2, "BBVac": 0, "total": 41}, {"fecha": "2026-03-17", "mes": "Marzo", "sem": 12, "turno": "T1", "formato": "", "LAB": 0, "PAST": 9, "BLANDA": 34, "LAC": 0, "BBVac": 0, "total": 43}, {"fecha": "2026-03-17", "mes": "Marzo", "sem": 12, "turno": "T2", "formato": "", "LAB": 0, "PAST": 7, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 38}, {"fecha": "2026-03-17", "mes": "Marzo", "sem": 12, "turno": "T3", "formato": "", "LAB": 0, "PAST": 8, "BLANDA": 37, "LAC": 0, "BBVac": 0, "total": 45}, {"fecha": "2026-03-18", "mes": "Marzo", "sem": 12, "turno": "T1", "formato": "", "LAB": 0, "PAST": 7, "BLANDA": 38, "LAC": 0, "BBVac": 0, "total": 45}, {"fecha": "2026-03-18", "mes": "Marzo", "sem": 12, "turno": "T2", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 41, "LAC": 0, "BBVac": 0, "total": 45}, {"fecha": "2026-03-18", "mes": "Marzo", "sem": 12, "turno": "T3", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 47, "LAC": 0, "BBVac": 0, "total": 51}, {"fecha": "2026-03-19", "mes": "Marzo", "sem": 12, "turno": "T1", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 35, "LAC": 0, "BBVac": 0, "total": 39}, {"fecha": "2026-03-19", "mes": "Marzo", "sem": 12, "turno": "T2", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 37, "LAC": 0, "BBVac": 0, "total": 40}, {"fecha": "2026-03-19", "mes": "Marzo", "sem": 12, "turno": "T3", "formato": "", "LAB": 11, "PAST": 30, "BLANDA": 29, "LAC": 0, "BBVac": 0, "total": 70}, {"fecha": "2026-03-20", "mes": "Marzo", "sem": 12, "turno": "T1", "formato": "", "LAB": 0, "PAST": 7, "BLANDA": 36, "LAC": 0, "BBVac": 0, "total": 43}, {"fecha": "2026-03-20", "mes": "Marzo", "sem": 12, "turno": "T2", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 39, "LAC": 0, "BBVac": 0, "total": 42}, {"fecha": "2026-03-20", "mes": "Marzo", "sem": 12, "turno": "T3", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 38, "LAC": 0, "BBVac": 0, "total": 40}, {"fecha": "2026-03-21", "mes": "Marzo", "sem": 12, "turno": "T1", "formato": "", "LAB": 0, "PAST": 11, "BLANDA": 39, "LAC": 0, "BBVac": 0, "total": 50}, {"fecha": "2026-03-21", "mes": "Marzo", "sem": 12, "turno": "T2", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 38, "LAC": 0, "BBVac": 0, "total": 41}, {"fecha": "2026-03-23", "mes": "Marzo", "sem": 13, "turno": "T1", "formato": "", "LAB": 16, "PAST": 41, "BLANDA": 23, "LAC": 0, "BBVac": 0, "total": 80}, {"fecha": "2026-03-23", "mes": "Marzo", "sem": 13, "turno": "T2", "formato": "", "LAB": 14, "PAST": 4, "BLANDA": 20, "LAC": 0, "BBVac": 0, "total": 38}, {"fecha": "2026-03-23", "mes": "Marzo", "sem": 13, "turno": "T3", "formato": "", "LAB": 5, "PAST": 4, "BLANDA": 19, "LAC": 0, "BBVac": 0, "total": 28}, {"fecha": "2026-03-24", "mes": "Marzo", "sem": 13, "turno": "T1", "formato": "", "LAB": 8, "PAST": 8, "BLANDA": 33, "LAC": 0, "BBVac": 0, "total": 49}, {"fecha": "2026-03-24", "mes": "Marzo", "sem": 13, "turno": "T2", "formato": "", "LAB": 10, "PAST": 5, "BLANDA": 38, "LAC": 0, "BBVac": 0, "total": 53}, {"fecha": "2026-03-24", "mes": "Marzo", "sem": 13, "turno": "T3", "formato": "", "LAB": 8, "PAST": 11, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 50}, {"fecha": "2026-03-25", "mes": "Marzo", "sem": 13, "turno": "T1", "formato": "", "LAB": 14, "PAST": 31, "BLANDA": 22, "LAC": 0, "BBVac": 0, "total": 67}, {"fecha": "2026-03-25", "mes": "Marzo", "sem": 13, "turno": "T2", "formato": "", "LAB": 8, "PAST": 4, "BLANDA": 32, "LAC": 1, "BBVac": 0, "total": 45}, {"fecha": "2026-03-25", "mes": "Marzo", "sem": 13, "turno": "T3", "formato": "", "LAB": 9, "PAST": 3, "BLANDA": 29, "LAC": 0, "BBVac": 0, "total": 41}, {"fecha": "2026-03-26", "mes": "Marzo", "sem": 13, "turno": "T1", "formato": "", "LAB": 11, "PAST": 3, "BLANDA": 32, "LAC": 0, "BBVac": 0, "total": 46}, {"fecha": "2026-03-26", "mes": "Marzo", "sem": 13, "turno": "T2", "formato": "", "LAB": 6, "PAST": 5, "BLANDA": 30, "LAC": 0, "BBVac": 0, "total": 41}, {"fecha": "2026-03-26", "mes": "Marzo", "sem": 13, "turno": "T3", "formato": "", "LAB": 9, "PAST": 3, "BLANDA": 32, "LAC": 0, "BBVac": 0, "total": 44}, {"fecha": "2026-03-27", "mes": "Marzo", "sem": 13, "turno": "T1", "formato": "", "LAB": 7, "PAST": 10, "BLANDA": 28, "LAC": 0, "BBVac": 0, "total": 45}, {"fecha": "2026-03-27", "mes": "Marzo", "sem": 13, "turno": "T2", "formato": "", "LAB": 9, "PAST": 4, "BLANDA": 29, "LAC": 0, "BBVac": 0, "total": 42}, {"fecha": "2026-03-27", "mes": "Marzo", "sem": 13, "turno": "T3", "formato": "", "LAB": 8, "PAST": 4, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 43}, {"fecha": "2026-03-28", "mes": "Marzo", "sem": 13, "turno": "T1", "formato": "", "LAB": 5, "PAST": 3, "BLANDA": 19, "LAC": 0, "BBVac": 0, "total": 27}, {"fecha": "2026-03-29", "mes": "Marzo", "sem": 14, "turno": "T3", "formato": "", "LAB": 11, "PAST": 13, "BLANDA": 39, "LAC": 1, "BBVac": 0, "total": 64}, {"fecha": "2026-03-30", "mes": "Marzo", "sem": 14, "turno": "T1", "formato": "", "LAB": 10, "PAST": 8, "BLANDA": 30, "LAC": 1, "BBVac": 0, "total": 49}, {"fecha": "2026-03-30", "mes": "Marzo", "sem": 14, "turno": "T2", "formato": "", "LAB": 9, "PAST": 8, "BLANDA": 36, "LAC": 1, "BBVac": 0, "total": 54}, {"fecha": "2026-03-30", "mes": "Marzo", "sem": 14, "turno": "T3", "formato": "", "LAB": 7, "PAST": 4, "BLANDA": 23, "LAC": 1, "BBVac": 0, "total": 35}, {"fecha": "2026-03-31", "mes": "Marzo", "sem": 14, "turno": "T1", "formato": "", "LAB": 6, "PAST": 8, "BLANDA": 21, "LAC": 2, "BBVac": 0, "total": 37}, {"fecha": "2026-03-31", "mes": "Marzo", "sem": 14, "turno": "T2", "formato": "", "LAB": 6, "PAST": 11, "BLANDA": 19, "LAC": 0, "BBVac": 0, "total": 36}, {"fecha": "2026-03-31", "mes": "Marzo", "sem": 14, "turno": "T3", "formato": "", "LAB": 10, "PAST": 4, "BLANDA": 33, "LAC": 0, "BBVac": 0, "total": 47}, {"fecha": "2026-04-01", "mes": "Abril", "sem": 14, "turno": "T1", "formato": "", "LAB": 10, "PAST": 5, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 46}, {"fecha": "2026-04-01", "mes": "Abril", "sem": 14, "turno": "T2", "formato": "", "LAB": 10, "PAST": 7, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 48}, {"fecha": "2026-04-01", "mes": "Abril", "sem": 14, "turno": "T3", "formato": "", "LAB": 10, "PAST": 4, "BLANDA": 32, "LAC": 0, "BBVac": 0, "total": 46}, {"fecha": "2026-04-02", "mes": "Abril", "sem": 14, "turno": "T1", "formato": "", "LAB": 19, "PAST": 0, "BLANDA": 0, "LAC": 0, "BBVac": 0, "total": 19}, {"fecha": "2026-04-02", "mes": "Abril", "sem": 14, "turno": "T2", "formato": "", "LAB": 5, "PAST": 0, "BLANDA": 0, "LAC": 0, "BBVac": 0, "total": 5}, {"fecha": "2026-04-02", "mes": "Abril", "sem": 14, "turno": "T3", "formato": "", "LAB": 5, "PAST": 0, "BLANDA": 0, "LAC": 0, "BBVac": 0, "total": 5}, {"fecha": "2026-04-06", "mes": "Abril", "sem": 15, "turno": "T2", "formato": "", "LAB": 16, "PAST": 23, "BLANDA": 13, "LAC": 0, "BBVac": 0, "total": 52}, {"fecha": "2026-04-06", "mes": "Abril", "sem": 15, "turno": "T3", "formato": "", "LAB": 11, "PAST": 25, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 67}, {"fecha": "2026-04-07", "mes": "Abril", "sem": 15, "turno": "T1", "formato": "", "LAB": 11, "PAST": 9, "BLANDA": 33, "LAC": 0, "BBVac": 0, "total": 53}, {"fecha": "2026-04-07", "mes": "Abril", "sem": 15, "turno": "T2", "formato": "", "LAB": 10, "PAST": 5, "BLANDA": 30, "LAC": 0, "BBVac": 0, "total": 45}, {"fecha": "2026-04-07", "mes": "Abril", "sem": 15, "turno": "T3", "formato": "", "LAB": 11, "PAST": 3, "BLANDA": 32, "LAC": 0, "BBVac": 0, "total": 46}, {"fecha": "2026-04-08", "mes": "Abril", "sem": 15, "turno": "T1", "formato": "", "LAB": 11, "PAST": 32, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 74}, {"fecha": "2026-04-08", "mes": "Abril", "sem": 15, "turno": "T2", "formato": "", "LAB": 11, "PAST": 25, "BLANDA": 17, "LAC": 0, "BBVac": 0, "total": 53}, {"fecha": "2026-04-08", "mes": "Abril", "sem": 15, "turno": "T3", "formato": "", "LAB": 10, "PAST": 3, "BLANDA": 27, "LAC": 0, "BBVac": 0, "total": 40}, {"fecha": "2026-04-09", "mes": "Abril", "sem": 15, "turno": "T1", "formato": "", "LAB": 8, "PAST": 2, "BLANDA": 24, "LAC": 0, "BBVac": 0, "total": 34}, {"fecha": "2026-04-09", "mes": "Abril", "sem": 15, "turno": "T2", "formato": "", "LAB": 10, "PAST": 1, "BLANDA": 28, "LAC": 0, "BBVac": 0, "total": 39}, {"fecha": "2026-04-09", "mes": "Abril", "sem": 15, "turno": "T3", "formato": "", "LAB": 6, "PAST": 5, "BLANDA": 20, "LAC": 0, "BBVac": 0, "total": 31}, {"fecha": "2026-04-10", "mes": "Abril", "sem": 15, "turno": "T1", "formato": "", "LAB": 0, "PAST": 0, "BLANDA": 2, "LAC": 0, "BBVac": 0, "total": 2}, {"fecha": "2026-04-10", "mes": "Abril", "sem": 15, "turno": "T2", "formato": "", "LAB": 9, "PAST": 18, "BLANDA": 23, "LAC": 0, "BBVac": 0, "total": 50}, {"fecha": "2026-04-10", "mes": "Abril", "sem": 15, "turno": "T3", "formato": "", "LAB": 10, "PAST": 2, "BLANDA": 21, "LAC": 0, "BBVac": 0, "total": 33}, {"fecha": "2026-04-11", "mes": "Abril", "sem": 15, "turno": "T1", "formato": "", "LAB": 11, "PAST": 3, "BLANDA": 40, "LAC": 0, "BBVac": 0, "total": 54}, {"fecha": "2026-04-11", "mes": "Abril", "sem": 15, "turno": "T2", "formato": "", "LAB": 12, "PAST": 5, "BLANDA": 37, "LAC": 0, "BBVac": 0, "total": 54}, {"fecha": "2026-04-11", "mes": "Abril", "sem": 15, "turno": "T3", "formato": "", "LAB": 7, "PAST": 0, "BLANDA": 0, "LAC": 0, "BBVac": 0, "total": 7}, {"fecha": "2026-04-13", "mes": "Abril", "sem": 16, "turno": "T2", "formato": "", "LAB": 25, "PAST": 27, "BLANDA": 10, "LAC": 0, "BBVac": 0, "total": 62}, {"fecha": "2026-04-13", "mes": "Abril", "sem": 16, "turno": "T3", "formato": "", "LAB": 10, "PAST": 3, "BLANDA": 33, "LAC": 2, "BBVac": 0, "total": 48}, {"fecha": "2026-04-14", "mes": "Abril", "sem": 16, "turno": "T1", "formato": "", "LAB": 10, "PAST": 4, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 45}, {"fecha": "2026-04-14", "mes": "Abril", "sem": 16, "turno": "T2", "formato": "", "LAB": 10, "PAST": 3, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 44}, {"fecha": "2026-04-14", "mes": "Abril", "sem": 16, "turno": "T3", "formato": "", "LAB": 12, "PAST": 7, "BLANDA": 32, "LAC": 0, "BBVac": 0, "total": 51}, {"fecha": "2026-04-15", "mes": "Abril", "sem": 16, "turno": "T1", "formato": "", "LAB": 11, "PAST": 6, "BLANDA": 36, "LAC": 0, "BBVac": 0, "total": 53}, {"fecha": "2026-04-15", "mes": "Abril", "sem": 16, "turno": "T2", "formato": "", "LAB": 12, "PAST": 1, "BLANDA": 33, "LAC": 0, "BBVac": 0, "total": 46}, {"fecha": "2026-04-15", "mes": "Abril", "sem": 16, "turno": "T3", "formato": "", "LAB": 8, "PAST": 2, "BLANDA": 27, "LAC": 0, "BBVac": 0, "total": 37}, {"fecha": "2026-04-16", "mes": "Abril", "sem": 16, "turno": "T1", "formato": "", "LAB": 15, "PAST": 25, "BLANDA": 15, "LAC": 0, "BBVac": 0, "total": 55}, {"fecha": "2026-04-16", "mes": "Abril", "sem": 16, "turno": "T2", "formato": "", "LAB": 12, "PAST": 13, "BLANDA": 39, "LAC": 0, "BBVac": 0, "total": 64}, {"fecha": "2026-04-16", "mes": "Abril", "sem": 16, "turno": "T3", "formato": "", "LAB": 12, "PAST": 19, "BLANDA": 33, "LAC": 0, "BBVac": 0, "total": 64}, {"fecha": "2026-04-17", "mes": "Abril", "sem": 16, "turno": "T1", "formato": "", "LAB": 11, "PAST": 2, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 44}, {"fecha": "2026-04-17", "mes": "Abril", "sem": 16, "turno": "T2", "formato": "", "LAB": 12, "PAST": 3, "BLANDA": 32, "LAC": 0, "BBVac": 0, "total": 47}, {"fecha": "2026-04-17", "mes": "Abril", "sem": 16, "turno": "T3", "formato": "", "LAB": 13, "PAST": 2, "BLANDA": 38, "LAC": 0, "BBVac": 0, "total": 53}, {"fecha": "2026-04-18", "mes": "Abril", "sem": 16, "turno": "T1", "formato": "", "LAB": 6, "PAST": 8, "BLANDA": 18, "LAC": 0, "BBVac": 0, "total": 32}, {"fecha": "2026-04-18", "mes": "Abril", "sem": 16, "turno": "T2", "formato": "", "LAB": 8, "PAST": 0, "BLANDA": 0, "LAC": 0, "BBVac": 0, "total": 8}, {"fecha": "2026-04-18", "mes": "Abril", "sem": 16, "turno": "T3", "formato": "", "LAB": 15, "PAST": 0, "BLANDA": 0, "LAC": 0, "BBVac": 0, "total": 15}, {"fecha": "2026-04-21", "mes": "Abril", "sem": 17, "turno": "T1", "formato": "", "LAB": 9, "PAST": 28, "BLANDA": 24, "LAC": 0, "BBVac": 0, "total": 61}, {"fecha": "2026-04-21", "mes": "Abril", "sem": 17, "turno": "T2", "formato": "", "LAB": 11, "PAST": 17, "BLANDA": 32, "LAC": 0, "BBVac": 0, "total": 60}, {"fecha": "2026-04-21", "mes": "Abril", "sem": 17, "turno": "T3", "formato": "", "LAB": 10, "PAST": 2, "BLANDA": 29, "LAC": 0, "BBVac": 0, "total": 41}, {"fecha": "2026-04-22", "mes": "Abril", "sem": 17, "turno": "T1", "formato": "", "LAB": 9, "PAST": 8, "BLANDA": 29, "LAC": 0, "BBVac": 0, "total": 46}, {"fecha": "2026-04-22", "mes": "Abril", "sem": 17, "turno": "T2", "formato": "", "LAB": 11, "PAST": 3, "BLANDA": 29, "LAC": 0, "BBVac": 0, "total": 43}, {"fecha": "2026-04-22", "mes": "Abril", "sem": 17, "turno": "T3", "formato": "", "LAB": 11, "PAST": 20, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 62}, {"fecha": "2026-04-23", "mes": "Abril", "sem": 17, "turno": "T1", "formato": "", "LAB": 9, "PAST": 3, "BLANDA": 28, "LAC": 0, "BBVac": 0, "total": 40}, {"fecha": "2026-04-23", "mes": "Abril", "sem": 17, "turno": "T2", "formato": "", "LAB": 19, "PAST": 18, "BLANDA": 23, "LAC": 0, "BBVac": 0, "total": 60}, {"fecha": "2026-04-23", "mes": "Abril", "sem": 17, "turno": "T3", "formato": "", "LAB": 15, "PAST": 5, "BLANDA": 28, "LAC": 1, "BBVac": 0, "total": 49}, {"fecha": "2026-04-24", "mes": "Abril", "sem": 17, "turno": "T1", "formato": "", "LAB": 11, "PAST": 3, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 45}, {"fecha": "2026-04-24", "mes": "Abril", "sem": 17, "turno": "T2", "formato": "", "LAB": 9, "PAST": 2, "BLANDA": 26, "LAC": 0, "BBVac": 0, "total": 37}, {"fecha": "2026-04-26", "mes": "Abril", "sem": 18, "turno": "T1", "formato": "", "LAB": 61, "PAST": 31, "BLANDA": 12, "LAC": 0, "BBVac": 0, "total": 104}, {"fecha": "2026-04-26", "mes": "Abril", "sem": 18, "turno": "T2", "formato": "", "LAB": 33, "PAST": 3, "BLANDA": 4, "LAC": 1, "BBVac": 0, "total": 41}, {"fecha": "2026-04-26", "mes": "Abril", "sem": 18, "turno": "T3", "formato": "", "LAB": 34, "PAST": 3, "BLANDA": 2, "LAC": 0, "BBVac": 0, "total": 39}, {"fecha": "2026-04-27", "mes": "Abril", "sem": 18, "turno": "T1", "formato": "", "LAB": 28, "PAST": 4, "BLANDA": 3, "LAC": 0, "BBVac": 0, "total": 35}, {"fecha": "2026-04-27", "mes": "Abril", "sem": 18, "turno": "T2", "formato": "", "LAB": 26, "PAST": 3, "BLANDA": 2, "LAC": 0, "BBVac": 0, "total": 31}, {"fecha": "2026-04-27", "mes": "Abril", "sem": 18, "turno": "T3", "formato": "", "LAB": 17, "PAST": 5, "BLANDA": 2, "LAC": 0, "BBVac": 0, "total": 24}, {"fecha": "2026-04-28", "mes": "Abril", "sem": 18, "turno": "T1", "formato": "", "LAB": 32, "PAST": 2, "BLANDA": 3, "LAC": 0, "BBVac": 0, "total": 37}, {"fecha": "2026-04-28", "mes": "Abril", "sem": 18, "turno": "T2", "formato": "", "LAB": 16, "PAST": 2, "BLANDA": 1, "LAC": 0, "BBVac": 0, "total": 19}, {"fecha": "2026-04-28", "mes": "Abril", "sem": 18, "turno": "T3", "formato": "", "LAB": 12, "PAST": 3, "BLANDA": 3, "LAC": 0, "BBVac": 0, "total": 18}, {"fecha": "2026-04-29", "mes": "Abril", "sem": 18, "turno": "T3", "formato": "", "LAB": 37, "PAST": 46, "BLANDA": 4, "LAC": 1, "BBVac": 0, "total": 88}, {"fecha": "2026-04-30", "mes": "Abril", "sem": 18, "turno": "T1", "formato": "", "LAB": 28, "PAST": 3, "BLANDA": 2, "LAC": 0, "BBVac": 0, "total": 33}, {"fecha": "2026-04-30", "mes": "Abril", "sem": 18, "turno": "T2", "formato": "", "LAB": 27, "PAST": 3, "BLANDA": 2, "LAC": 0, "BBVac": 0, "total": 32}, {"fecha": "2026-04-30", "mes": "Abril", "sem": 18, "turno": "T3", "formato": "", "LAB": 12, "PAST": 3, "BLANDA": 6, "LAC": 0, "BBVac": 0, "total": 21}, {"fecha": "2026-05-02", "mes": "Mayo", "sem": 18, "turno": "T1", "formato": "", "LAB": 26, "PAST": 30, "BLANDA": 7, "LAC": 0, "BBVac": 0, "total": 63}, {"fecha": "2026-05-02", "mes": "Mayo", "sem": 18, "turno": "T2", "formato": "", "LAB": 22, "PAST": 3, "BLANDA": 11, "LAC": 0, "BBVac": 0, "total": 36}, {"fecha": "2026-05-04", "mes": "Mayo", "sem": 19, "turno": "T3", "formato": "", "LAB": 31, "PAST": 37, "BLANDA": 8, "LAC": 6, "BBVac": 0, "total": 82}, {"fecha": "2026-05-05", "mes": "Mayo", "sem": 19, "turno": "T1", "formato": "", "LAB": 32, "PAST": 4, "BLANDA": 3, "LAC": 2, "BBVac": 0, "total": 41}, {"fecha": "2026-05-05", "mes": "Mayo", "sem": 19, "turno": "T2", "formato": "", "LAB": 4, "PAST": 3, "BLANDA": 42, "LAC": 4, "BBVac": 0, "total": 53}, {"fecha": "2026-05-05", "mes": "Mayo", "sem": 19, "turno": "T3", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 38, "LAC": 0, "BBVac": 0, "total": 41}, {"fecha": "2026-05-06", "mes": "Mayo", "sem": 19, "turno": "T1", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 42, "LAC": 2, "BBVac": 0, "total": 48}, {"fecha": "2026-05-06", "mes": "Mayo", "sem": 19, "turno": "T2", "formato": "", "LAB": 2, "PAST": 2, "BLANDA": 26, "LAC": 0, "BBVac": 0, "total": 30}, {"fecha": "2026-05-06", "mes": "Mayo", "sem": 19, "turno": "T3", "formato": "", "LAB": 10, "PAST": 22, "BLANDA": 37, "LAC": 3, "BBVac": 0, "total": 72}, {"fecha": "2026-05-07", "mes": "Mayo", "sem": 19, "turno": "T1", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 42, "LAC": 4, "BBVac": 0, "total": 49}, {"fecha": "2026-05-07", "mes": "Mayo", "sem": 19, "turno": "T2", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 44, "LAC": 1, "BBVac": 0, "total": 48}, {"fecha": "2026-05-07", "mes": "Mayo", "sem": 19, "turno": "T3", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 41, "LAC": 0, "BBVac": 0, "total": 43}, {"fecha": "2026-05-08", "mes": "Mayo", "sem": 19, "turno": "T1", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 31, "LAC": 0, "BBVac": 0, "total": 33}, {"fecha": "2026-05-08", "mes": "Mayo", "sem": 19, "turno": "T2", "formato": "", "LAB": 0, "PAST": 6, "BLANDA": 45, "LAC": 4, "BBVac": 0, "total": 55}, {"fecha": "2026-05-08", "mes": "Mayo", "sem": 19, "turno": "T3", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 36, "LAC": 3, "BBVac": 0, "total": 42}, {"fecha": "2026-05-09", "mes": "Mayo", "sem": 19, "turno": "T1", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 37, "LAC": 3, "BBVac": 0, "total": 43}, {"fecha": "2026-05-09", "mes": "Mayo", "sem": 19, "turno": "T2", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 26, "LAC": 0, "BBVac": 0, "total": 28}, {"fecha": "2026-05-11", "mes": "Mayo", "sem": 20, "turno": "T1", "formato": "", "LAB": 35, "PAST": 25, "BLANDA": 8, "LAC": 1, "BBVac": 0, "total": 69}, {"fecha": "2026-05-11", "mes": "Mayo", "sem": 20, "turno": "T2", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 40, "LAC": 2, "BBVac": 0, "total": 45}, {"fecha": "2026-05-11", "mes": "Mayo", "sem": 20, "turno": "T3", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 44, "LAC": 1, "BBVac": 0, "total": 47}, {"fecha": "2026-05-12", "mes": "Mayo", "sem": 20, "turno": "T1", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 49, "LAC": 1, "BBVac": 0, "total": 53}, {"fecha": "2026-05-12", "mes": "Mayo", "sem": 20, "turno": "T2", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 44, "LAC": 2, "BBVac": 0, "total": 49}, {"fecha": "2026-05-12", "mes": "Mayo", "sem": 20, "turno": "T3", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 46, "LAC": 0, "BBVac": 0, "total": 48}, {"fecha": "2026-05-13", "mes": "Mayo", "sem": 20, "turno": "T1", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 49, "LAC": 1, "BBVac": 0, "total": 53}, {"fecha": "2026-05-13", "mes": "Mayo", "sem": 20, "turno": "T2", "formato": "", "LAB": 12, "PAST": 22, "BLANDA": 31, "LAC": 2, "BBVac": 0, "total": 67}, {"fecha": "2026-05-13", "mes": "Mayo", "sem": 20, "turno": "T3", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 33, "LAC": 2, "BBVac": 0, "total": 38}, {"fecha": "2026-05-14", "mes": "Mayo", "sem": 20, "turno": "T1", "formato": "", "LAB": 10, "PAST": 3, "BLANDA": 45, "LAC": 2, "BBVac": 0, "total": 60}, {"fecha": "2026-05-14", "mes": "Mayo", "sem": 20, "turno": "T2", "formato": "", "LAB": 0, "PAST": 13, "BLANDA": 35, "LAC": 4, "BBVac": 0, "total": 52}, {"fecha": "2026-05-14", "mes": "Mayo", "sem": 20, "turno": "T3", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 26, "LAC": 0, "BBVac": 0, "total": 28}, {"fecha": "2026-05-15", "mes": "Mayo", "sem": 20, "turno": "T1", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 26, "LAC": 0, "BBVac": 0, "total": 29}, {"fecha": "2026-05-15", "mes": "Mayo", "sem": 20, "turno": "T2", "formato": "", "LAB": 1, "PAST": 4, "BLANDA": 27, "LAC": 1, "BBVac": 0, "total": 33}, {"fecha": "2026-05-15", "mes": "Mayo", "sem": 20, "turno": "T3", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 39, "LAC": 1, "BBVac": 0, "total": 42}, {"fecha": "2026-05-16", "mes": "Mayo", "sem": 20, "turno": "T1", "formato": "", "LAB": 2, "PAST": 3, "BLANDA": 27, "LAC": 1, "BBVac": 0, "total": 33}, {"fecha": "2026-05-16", "mes": "Mayo", "sem": 20, "turno": "T2", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 0, "LAC": 2, "BBVac": 0, "total": 4}, {"fecha": "2026-05-18", "mes": "Mayo", "sem": 21, "turno": "T1", "formato": "", "LAB": 0, "PAST": 24, "BLANDA": 45, "LAC": 0, "BBVac": 1, "total": 70}, {"fecha": "2026-05-18", "mes": "Mayo", "sem": 21, "turno": "T2", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 48, "LAC": 1, "BBVac": 1, "total": 52}, {"fecha": "2026-05-18", "mes": "Mayo", "sem": 21, "turno": "T3", "formato": "", "LAB": 0, "PAST": 4, "BLANDA": 50, "LAC": 4, "BBVac": 5, "total": 63}, {"fecha": "2026-05-19", "mes": "Mayo", "sem": 21, "turno": "T1", "formato": "", "LAB": 1, "PAST": 2, "BLANDA": 41, "LAC": 4, "BBVac": 4, "total": 52}, {"fecha": "2026-05-19", "mes": "Mayo", "sem": 21, "turno": "T2", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 37, "LAC": 3, "BBVac": 5, "total": 47}, {"fecha": "2026-05-19", "mes": "Mayo", "sem": 21, "turno": "T3", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 28, "LAC": 4, "BBVac": 4, "total": 38}, {"fecha": "2026-05-20", "mes": "Mayo", "sem": 21, "turno": "T1", "formato": "", "LAB": 2, "PAST": 3, "BLANDA": 41, "LAC": 4, "BBVac": 5, "total": 55}, {"fecha": "2026-05-20", "mes": "Mayo", "sem": 21, "turno": "T2", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 38, "LAC": 3, "BBVac": 4, "total": 47}, {"fecha": "2026-05-20", "mes": "Mayo", "sem": 21, "turno": "T3", "formato": "", "LAB": 12, "PAST": 23, "BLANDA": 30, "LAC": 2, "BBVac": 3, "total": 70}, {"fecha": "2026-05-21", "mes": "Mayo", "sem": 21, "turno": "T1", "formato": "", "LAB": 0, "PAST": 3, "BLANDA": 43, "LAC": 0, "BBVac": 4, "total": 50}, {"fecha": "2026-05-21", "mes": "Mayo", "sem": 21, "turno": "T2", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 41, "LAC": 0, "BBVac": 5, "total": 48}, {"fecha": "2026-05-21", "mes": "Mayo", "sem": 21, "turno": "T3", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 38, "LAC": 0, "BBVac": 4, "total": 44}, {"fecha": "2026-05-22", "mes": "Mayo", "sem": 21, "turno": "T1", "formato": "", "LAB": 0, "PAST": 1, "BLANDA": 42, "LAC": 0, "BBVac": 5, "total": 48}, {"fecha": "2026-05-22", "mes": "Mayo", "sem": 21, "turno": "T2", "formato": "", "LAB": 0, "PAST": 2, "BLANDA": 23, "LAC": 0, "BBVac": 5, "total": 30}, {"fecha": "2026-05-22", "mes": "Mayo", "sem": 21, "turno": "T3", "formato": "", "LAB": 0, "PAST": 1, "BLANDA": 13, "LAC": 0, "BBVac": 3, "total": 17}, {"fecha": "2026-05-23", "mes": "Mayo", "sem": 21, "turno": "T1", "formato": "", "LAB": 5, "PAST": 1, "BLANDA": 7, "LAC": 0, "BBVac": 2, "total": 15}, {"fecha": "2026-05-24", "mes": "Mayo", "sem": 22, "turno": "T3", "formato": "", "LAB": 46, "PAST": 1, "BLANDA": 3, "LAC": 0, "BBVac": 1, "total": 51}, {"fecha": "2026-05-25", "mes": "Mayo", "sem": 22, "turno": "T1", "formato": "PC1000", "LAB": 10, "PAST": 23, "BLANDA": 15, "LAC": 0, "BBVac": 0, "total": 48}, {"fecha": "2026-05-25", "mes": "Mayo", "sem": 22, "turno": "T2", "formato": "PC1000", "LAB": 0, "PAST": 3, "BLANDA": 19, "LAC": 1, "BBVac": 7, "total": 30}, {"fecha": "2026-05-25", "mes": "Mayo", "sem": 22, "turno": "T3", "formato": "PC1000", "LAB": 1, "PAST": 2, "BLANDA": 15, "LAC": 0, "BBVac": 6, "total": 24}];
+
+const EQ     = ['LAB','PAST','BLANDA','LAC','BBVac'];
+const EQNAME = {LAB:'Lav. Botellas',PAST:'Pasteurizador',BLANDA:'Agua Blanda',LAC:'Lav. Cajas',BBVac:'Bomba Vacío'};
+const EQCOL  = {LAB:'#6E2630',PAST:'#0074AA',BLANDA:'#FFB800',LAC:'#800080',BBVac:'#166866'};
+const EQIND  = {LAB:45, LAC:2, PAST:8, BLANDA:null, BBVac:5};
+const PLAN   = {
+  LAB:    'https://splan.ab-inbev.com/plans/view?data=JTIyMWFkNjVjMTQtNDlmOC00NmRmLWFiNTgtYjMxOGRiOGM0MTU2JTIy',
+  LAC:    'https://splan.ab-inbev.com/plans/view?data=JTIyNjAyMDAzZWItYmI3Ni00ZTBkLWFlOTMtOWVlYTAyYzIyOGRlJTIy',
+  PAST:   'https://splan.ab-inbev.com/plans/view?data=JTIyYzhiOTdmODItMjBmZC00NTUyLTgxMGQtMDQ3MzU4Y2EzYWExJTIy',
+  BLANDA: '#',
+  BBVac:  'https://splan.ab-inbev.com/plans/view?data=JTIyMTEyMGY2ODQtMzcxNy00MTJjLWFiOGItOTZkMzA2ODU5MTAwJTIy',
+};
+const MORD   = ["Enero", "Febrero", "Marzo", "Abril", "Mayo"];
+const CHARTS = {};
+let curEq = 'ALL';
+
+// ── CARGA EXCEL ─────────────────────────────────────────────────────────
+function loadExcel(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      // Buscar hoja con datos: 'Data', o la primera hoja con contenido
+    let ws = wb.Sheets['Data'];
+    if(!ws) {
+      // Buscar la hoja que tenga más filas (la que tiene los datos)
+      let maxRows = 0;
+      wb.SheetNames.forEach(name => {
+        const s = wb.Sheets[name];
+        const range = XLSX.utils.decode_range(s['!ref']||'A1:A1');
+        if(range.e.r > maxRows) { maxRows = range.e.r; ws = s; }
+      });
+    }
+      const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+      const heads=raw[0].map(h=>h?String(h).trim():'');
+      const newRows=[];
+      // Detectar índices de columnas por nombre
+      const ci = name => heads.findIndex(h=>h.toLowerCase().includes(name.toLowerCase()));
+      const iMes=1, iSem=2, iTurno=3;
+      const iFmt=ci('forma');
+      const iLABini=ci('V.Ini LAB'), iLABfin=ci('V. Final LAB');
+      const iPASTini=ci('V.Ini PAST'), iPASTfin=ci('V. Final PAST');
+      const iBLAini=ci('V.Ini BLANDA'), iBLAfin=ci('V. Final BLANDA');
+      const iLACini=ci('V.Ini LAC'), iLACfin=ci('V. Final LAC');
+      const iBBini=ci('V.Ini BB'), iBBfin=ci('V. Final BB');
+      for(let i=1;i<raw.length;i++){
+        const r=raw[i]; if(!r[0]) continue;
+        let fecha = r[0];
+        if(!fecha) continue;
+        if(typeof fecha === 'number') fecha = new Date((fecha-25569)*86400000);
+        if(!(fecha instanceof Date) || isNaN(fecha.getTime())) continue;
+        const pad=n=>String(n).padStart(2,'0');
+        const fs=`${fecha.getFullYear()}-${pad(fecha.getMonth()+1)}-${pad(fecha.getDate())}`;
+        const c=(a,b)=>(a!=null&&b!=null&&b>=a)?Math.round(b-a):0;
+        const row={fecha:fs,mes:((r[iMes]||'')+'').trim().replace(/^./,c=>c.toUpperCase()),sem:r[iSem]||0,turno:r[iTurno]||'',
+          formato:iFmt>=0?(r[iFmt]||''):'',
+          LAB:c(iLABini>=0?r[iLABini]:null,iLABfin>=0?r[iLABfin]:null),
+          PAST:c(iPASTini>=0?r[iPASTini]:null,iPASTfin>=0?r[iPASTfin]:null),
+          BLANDA:c(iBLAini>=0?r[iBLAini]:null,iBLAfin>=0?r[iBLAfin]:null),
+          LAC:c(iLACini>=0?r[iLACini]:null,iLACfin>=0?r[iLACfin]:null),
+          BBVac:c(iBBini>=0?r[iBBini]:null,iBBfin>=0?r[iBBfin]:null)};
+        row.total=row.LAB+row.PAST+row.BLANDA+row.LAC+row.BBVac;
+        if(row.total>0) newRows.push(row);
+      }
+      RAW=newRows;
+      // Mostrar fecha del último dato (igual en todas las PCs)
+      const fechas = newRows.map(r=>r.fecha).sort();
+      const ultimaFecha = fechas[fechas.length-1] || '';
+      const primeraFecha = fechas[0] || '';
+      const st=`📅 <b style="color:#6BBF00">${primeraFecha}</b> → <b style="color:#6BBF00">${ultimaFecha}</b> &nbsp;|&nbsp; ${RAW.length} reg.`;
+      document.getElementById('refreshStatus').innerHTML=st;
+      document.getElementById('refreshStatus2').innerHTML=st;
+      populateFormatos(); populateSemanas(); render();
+    }catch(err){alert('Error al leer Excel: '+err);}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── FILTROS ──────────────────────────────────────────────────────────────
+function gf(){
+  const mes   =document.getElementById('fMes').value;
+  const sem   =document.getElementById('fSem').value;
+  const turno =document.getElementById('fTurno').value;
+  const fmt   =document.getElementById('fFmt').value;
+  const eq    =document.getElementById('fEq').value;
+  const desde =document.getElementById('fDesde').value;
+  const hasta =document.getElementById('fHasta').value;
+  return RAW.filter(r=>
+    r.total>0&&
+    (!desde ||r.fecha>=desde)&&
+    (!hasta ||r.fecha<=hasta)&&
+    (!mes   ||r.mes===mes)&&
+    (!sem   ||r.sem==sem)&&
+    (!turno ||r.turno===turno)&&
+    (!fmt   ||r.formato===fmt)&&
+    (!eq    ||r[eq]>0)
+  );
+}
+function populateSemanas(){
+  const mes=document.getElementById('fMes').value;
+  const sel=document.getElementById('fSem'); const cur=sel.value;
+  while(sel.options.length>1) sel.remove(1);
+  [...new Set(RAW.filter(r=>!mes||r.mes===mes).map(r=>r.sem))].sort((a,b)=>a-b).forEach(s=>{
+    const o=document.createElement('option');o.value=s;o.text='Sem '+s;sel.appendChild(o);
+  });
+  if([...sel.options].some(o=>o.value==cur)) sel.value=cur;
+}
+function populateFormatos(){
+  const sel=document.getElementById('fFmt'); const cur=sel.value;
+  while(sel.options.length>1) sel.remove(1);
+  [...new Set(RAW.map(r=>r.formato).filter(Boolean))].sort().forEach(f=>{
+    const o=document.createElement('option');o.value=f;o.text=f;sel.appendChild(o);
+  });
+  if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+}
+function resetFiltros(){
+  ['fMes','fSem','fTurno','fFmt','fEq'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fDesde').value='2026-01-01';
+  document.getElementById('fHasta').value='2026-05-31';
+  populateSemanas(); populateFormatos();
+// Mostrar rango de fechas de los datos cargados
+(function(){
+  if(RAW.length > 0){
+    const fechas = RAW.map(r=>r.fecha).sort();
+    const st = `📅 <b style="color:#6BBF00">${fechas[0]}</b> → <b style="color:#6BBF00">${fechas[fechas.length-1]}</b> &nbsp;|&nbsp; ${RAW.length} reg.`;
+    const s1 = document.getElementById('refreshStatus');
+    const s2 = document.getElementById('refreshStatus2');
+    if(s1) s1.innerHTML = st;
+    if(s2) s2.innerHTML = st;
+  }
+})();
+render();
+}
+function selTab(el,eq){
+  document.querySelectorAll('.eq-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active'); curEq=eq; render();
+}
+['fMes','fSem','fTurno','fFmt','fEq','fDesde','fHasta'].forEach(id=>
+  document.getElementById(id).addEventListener('change',()=>{if(id==='fMes')populateSemanas();render();})
+);
+populateSemanas(); populateFormatos();
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function dc(id){if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id];}}
+function sum(arr,k){return arr.reduce((a,r)=>a+(r[k]||0),0);}
+function fmt(n){return n>=1000?(n/1000).toFixed(1)+'k':n.toFixed(0);}
+const TT={backgroundColor:'#0F2040',borderColor:'#1C2E40',borderWidth:1,titleColor:'#8B949E',bodyColor:'#E6EDF3',
+  titleFont:{family:'JetBrains Mono',size:9},bodyFont:{family:'JetBrains Mono',size:10},padding:10};
+const GR={color:'rgba(255,255,255,0.04)',drawBorder:false};
+const TK={color:'#3D5068',font:{family:'JetBrains Mono',size:9}};
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function render(){ curEq==='ALL'?renderGeneral(gf()):renderEq(gf(),curEq); }
+
+// ══════════════════════════════════════════════════════
+//  VISTA GENERAL
+// ══════════════════════════════════════════════════════
+function renderGeneral(data){
+  const totalG=sum(data,'total');
+  const eqT={}; EQ.forEach(e=>eqT[e]=sum(data,e));
+  const topEq=EQ.reduce((a,b)=>eqT[a]>eqT[b]?a:b);
+  const porT={}; ['T1','T2','T3'].forEach(t=>porT[t]=sum(data.filter(r=>r.turno===t),'total'));
+  const topT=['T1','T2','T3'].reduce((a,b)=>porT[a]>porT[b]?a:b);
+  const porDia={}; data.forEach(r=>{porDia[r.fecha]=(porDia[r.fecha]||0)+r.total;});
+  const dias=Object.keys(porDia).length;
+  const _td=Object.entries(porDia).sort((a,b)=>b[1]-a[1])[0]; const topDia=_td?{fecha:_td[0],val:_td[1]}:null;
+  const prom=dias>0?totalG/dias:0;
+  const meses=MORD.filter(m=>data.some(r=>r.mes===m));
+
+  document.getElementById('main').innerHTML=`
+  <div class="kpi-row">
+    <div class="kpi" style="--accent:var(--blue)">
+      <div class="kpi-label">Consumo Total</div>
+      <div class="kpi-val">${totalG.toLocaleString()}<span class="kpi-unit">m³</span></div>
+      <div class="kpi-sub">${dias} días · ${meses.length} meses</div>
+    </div>
+    ${EQ.map(e=>`<div class="kpi" style="--accent:${EQCOL[e]}">
+      <div class="kpi-label">${EQNAME[e]}</div>
+      <div class="kpi-val" style="font-size:${eqT[e]>=1000?'18px':'24px'}">${eqT[e].toLocaleString()}<span class="kpi-unit">m³</span></div>
+      <div class="kpi-sub">${totalG>0?(eqT[e]/totalG*100).toFixed(1):0}% · IND:${EQIND[e]??'-'}</div>
+    </div>`).join('')}
+
+    <div class="kpi" style="--accent:var(--teal)">
+      <div class="kpi-label">Promedio Diario</div>
+      <div class="kpi-val">${prom.toFixed(1)}<span class="kpi-unit">m³</span></div>
+      <div class="kpi-sub">m³/día</div>
+    </div>
+  </div>
+
+  <!-- Pareto + Distribución + Turnos -->
+  <div class="charts-grid" style="grid-template-columns:1.4fr 1fr 1fr">
+    <div class="chart-card">
+      <div class="card-hdr"><span class="card-title" style="--accent:var(--blue)">Pareto por Equipo</span><span class="card-note">% acumulado</span></div>
+      <div class="chart-wrap"><canvas id="cPareto"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="card-hdr"><span class="card-title" style="--accent:var(--yellow)">Distribución por Equipo</span></div>
+      <div class="chart-wrap" style="position:relative">
+        <canvas id="cDonut"></canvas>
+        <div class="dc-center" id="cDonut_val"><div class="dc-val">${totalG.toLocaleString()}</div><div class="dc-lbl">m³ total</div></div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="card-hdr"><span class="card-title" style="--accent:var(--teal)">Distribución por Turno</span></div>
+      <div class="chart-wrap" style="position:relative">
+        <canvas id="cTurno"></canvas>
+        <div class="dc-center"><div class="dc-val">${['T1','T2','T3'].length}</div><div class="dc-lbl">turnos</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tendencia mensual -->
+  <div class="charts-grid">
+    <div class="chart-card wide">
+      <div class="card-hdr"><span class="card-title" style="--accent:var(--teal)">Tendencia Mensual por Equipo (m³)</span><span class="card-note">Ene–May 2026</span></div>
+      <div class="chart-wrap"><canvas id="cTend"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Turno x Equipo + Tabla mes -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="card-hdr"><span class="card-title" style="--accent:var(--green)">Consumo Turno × Equipo</span></div>
+      <div class="chart-wrap"><canvas id="cTxE"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="card-hdr"><span class="card-title" style="--accent:var(--red)">Resumen por Mes</span></div>
+      <div style="max-height:250px;overflow-y:auto">${buildTblMes(data)}</div>
+    </div>
+  </div>
+
+  <!-- Insights solamente en General -->
+  <div class="chart-card wide">
+    <div class="card-hdr"><span class="card-title" style="--accent:var(--teal)">Insights Clave</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px">${buildInsights(data,eqT,totalG,porT,topEq,topT)}</div>
+  </div>`;
+
+  drawPareto(eqT,totalG);
+  drawDonut(eqT,totalG,'cDonut');
+  drawTurnoDonut(porT,totalG);
+  drawTend(data);
+  drawTxE(data);
+}
+
+function drawPareto(eqT,total){
+  dc('p'); const sorted=[...EQ].sort((a,b)=>eqT[b]-eqT[a]);
+  const vals=sorted.map(e=>eqT[e]); let cum=0;
+  const cp=vals.map(v=>{cum+=v;return+(cum/total*100).toFixed(1);});
+  const ctx=document.getElementById('cPareto').getContext('2d');
+  CHARTS.p=new Chart(ctx,{type:'bar',data:{labels:sorted.map(e=>EQNAME[e]),datasets:[
+    {type:'bar',label:'m³',data:vals,backgroundColor:sorted.map((e,i)=>i<2?EQCOL[e]+'CC':EQCOL[e]+'55'),
+     borderColor:sorted.map(e=>EQCOL[e]),borderWidth:1,borderRadius:4,yAxisID:'y'},
+    {type:'line',label:'% Acum.',data:cp,borderColor:'#E3B341',backgroundColor:'transparent',
+     pointBackgroundColor:'#E3B341',pointRadius:4,tension:.3,yAxisID:'y2'}
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#8B949E',font:{family:'JetBrains Mono',size:9},usePointStyle:true}},tooltip:TT},
+    scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>v+'m³'}},
+      y2:{position:'right',grid:{display:false},ticks:{...TK,callback:v=>v+'%'},min:0,max:100}}}});
+}
+function drawDonut(eqT,total,id){
+  dc(id);
+  const ctx=document.getElementById(id).getContext('2d');
+  CHARTS[id]=new Chart(ctx,{type:'doughnut',data:{labels:EQ.map(e=>EQNAME[e]),datasets:[{
+    data:EQ.map(e=>eqT[e]),
+    backgroundColor:EQ.map(e=>EQCOL[e]+'EE'),
+    borderColor:EQ.map(e=>EQCOL[e]+'FF'),
+    borderWidth:2,hoverOffset:10,
+    borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'70%',
+      rotation:-120,circumference:300,
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#C0C8D4',font:{family:'JetBrains Mono',size:8},usePointStyle:true,padding:8,pointStyleWidth:8}},
+        tooltip:{...TT,callbacks:{label:it=>` ${it.label}: ${it.raw.toLocaleString()} m³ (${total>0?(it.raw/total*100).toFixed(1):0}%)`}}
+      }}});
+  // Actualizar texto central
+  const el=document.getElementById(id+'_val');
+  if(el){el.querySelector('.dc-val').textContent=total.toLocaleString();el.querySelector('.dc-lbl').textContent='m³ total';}
+}
+function drawTurnoDonut(porT,total){
+  dc('tu');
+  const ctx=document.getElementById('cTurno').getContext('2d');
+  CHARTS.tu=new Chart(ctx,{type:'doughnut',data:{labels:['T1','T2','T3'],datasets:[{
+    data:['T1','T2','T3'].map(t=>porT[t]||0),
+    backgroundColor:['#6BBF00EE','#2E9E6BEE','#1A7A50EE'],
+    borderColor:['#6BBF00','#2E9E6B','#1A7A50'],
+    borderWidth:2,hoverOffset:10,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'70%',
+      rotation:-120,circumference:300,
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#C0C8D4',font:{family:'JetBrains Mono',size:10},usePointStyle:true,padding:12,pointStyleWidth:10}},
+        tooltip:{...TT,callbacks:{label:it=>` ${it.label}: ${it.raw.toLocaleString()} m³ (${total>0?(it.raw/total*100).toFixed(1):0}%)`}}
+      }}});
+}
+function drawTend(data){
+  dc('te');
+  const meses=MORD.filter(m=>data.some(r=>r.mes===m));
+  const ctx=document.getElementById('cTend').getContext('2d');
+  CHARTS.te=new Chart(ctx,{type:'line',data:{labels:meses,datasets:EQ.map(e=>({
+    label:EQNAME[e],data:meses.map(m=>sum(data.filter(r=>r.mes===m),e)),
+    borderColor:EQCOL[e],backgroundColor:EQCOL[e]+'22',fill:false,
+    tension:.3,pointRadius:4,pointHoverRadius:6,borderWidth:2
+  }))},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#8B949E',font:{family:'JetBrains Mono',size:9},usePointStyle:true}},tooltip:TT},
+    scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>v+'m³'}}}}});
+}
+function drawTxE(data){
+  dc('txe');
+  const ctx=document.getElementById('cTxE').getContext('2d');
+  CHARTS.txe=new Chart(ctx,{type:'bar',data:{labels:['T1','T2','T3'],datasets:EQ.map(e=>({
+    label:EQNAME[e],data:['T1','T2','T3'].map(t=>sum(data.filter(r=>r.turno===t),e)),
+    backgroundColor:EQCOL[e]+'AA',borderColor:EQCOL[e],borderWidth:1,borderRadius:3
+  }))},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#8B949E',font:{family:'JetBrains Mono',size:9},usePointStyle:true}},tooltip:TT},
+    scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>v+'m³'}}}}});
+}
+function buildTblMes(data){
+  const meses=MORD.filter(m=>data.some(r=>r.mes===m));
+  let h='<table><thead><tr><th>Mes</th>'+EQ.map(e=>`<th style="color:${EQCOL[e]}">${EQNAME[e]}</th>`).join('')+'<th>Total</th></tr></thead><tbody>';
+  meses.forEach(m=>{
+    const md=data.filter(r=>r.mes===m);const t=sum(md,'total');
+    h+=`<tr><td style="color:#E6EDF3;font-weight:600">${m}</td>`;
+    EQ.forEach(e=>{h+=`<td><span style="color:${EQCOL[e]}">${sum(md,e)}</span></td>`;});
+    h+=`<td style="color:var(--blue);font-weight:600">${t}</td></tr>`;
+  });
+  return h+'</tbody></table>';
+}
+function buildPlanG(data,eqT,total,porT,topEq,topT){
+  return [
+    {ico:'⚠️',col:EQCOL[topEq],t:`${EQNAME[topEq]}: equipo crítico (IND: ${EQIND[topEq]??'-'})`,
+     d:`${fmt(eqT[topEq])} m³ · ${(eqT[topEq]/total*100).toFixed(1)}% del total. Auditar fugas y tiempos de ciclo.`},
+    {ico:'🔄',col:topT==='T3'?'#F85149':topT==='T2'?'#2D7DD2':'#6BBF00',t:`Turno ${topT} con mayor consumo`,
+     d:`${fmt(porT[topT])} m³ (${(porT[topT]/total*100).toFixed(1)}%). Revisar procedimientos operativos.`},
+    {ico:'💧',col:'#39C5BB',t:'Monitoreo continuo',d:'Registrar medidor inicio/fin de cada turno. Alertar si supera promedio en 20%.'},
+    {ico:'📋',col:'#A371F7',t:'Registro y acciones',d:'Documentar hallazgos por turno. Comparar consumo real vs indicador objetivo.'},
+  ].map(i=>`<div class="plan-item" style="--accent:${i.col}">
+    <div class="plan-ico">${i.ico}</div><div class="plan-text"><strong>${i.t}</strong><span>${i.d}</span></div>
+  </div>`).join('');
+}
+function buildInsights(data,eqT,total,porT,topEq,topT){
+  const meses=MORD.filter(m=>data.some(r=>r.mes===m));
+  const topMes=meses.map(m=>({m,t:sum(data.filter(r=>r.mes===m),'total')})).sort((a,b)=>b.t-a.t)[0];
+  return [
+    {ico:'🏭',t:'Equipo crítico',d:`${EQNAME[topEq]} con ${fmt(eqT[topEq])} m³ (${(eqT[topEq]/total*100).toFixed(1)}%). Mayor oportunidad de ahorro.`},
+    {ico:'🌊',t:'Agua Blanda domina',d:`${(eqT['BLANDA']/total*100).toFixed(1)}% del total. Optimizar ciclos y caudales.`},
+    {ico:'📅',t:'Mes pico',d:`${topMes?topMes.m+' con '+fmt(topMes.t)+' m³':'-'}. Correlacionar con campañas.`},
+    {ico:'⚙️',t:'Turno mayor',d:`${topT} con ${fmt(porT[topT])} m³. Revisar prácticas en ese turno.`},
+  ].map(i=>`<div class="insight"><div class="ins-ico">${i.ico}</div><div class="ins-text"><strong>${i.t}</strong><span>${i.d}</span></div></div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  VISTA EQUIPO INDIVIDUAL
+// ══════════════════════════════════════════════════════
+function renderEq(data,eq){
+  const col=EQCOL[eq],name=EQNAME[eq];
+  const totalEq=sum(data,eq),totalG=sum(data,'total');
+  const porT={}; ['T1','T2','T3'].forEach(t=>porT[t]=sum(data.filter(r=>r.turno===t),eq));
+  const topT=['T1','T2','T3'].reduce((a,b)=>porT[a]>porT[b]?a:b);
+  // porDia: acumular T1+T2+T3 por fecha
+  const porDiaMap={};
+  data.forEach(r=>{
+    if(r[eq]<=0) return;
+    if(!porDiaMap[r.fecha]) porDiaMap[r.fecha]={val:0,T1:0,T2:0,T3:0};
+    porDiaMap[r.fecha].val += r[eq];
+    porDiaMap[r.fecha][r.turno] = (porDiaMap[r.fecha][r.turno]||0) + r[eq];
+  });
+  const diasArr=Object.entries(porDiaMap).filter(([,v])=>v.val>0)
+    .sort((a,b)=>a[0]>b[0]?1:-1)
+    .map(([fecha,info])=>{
+      const topT=['T1','T2','T3'].reduce((a,b)=>info[a]>info[b]?a:b);
+      return {fecha, val:info.val, T1:info.T1||0, T2:info.T2||0, T3:info.T3||0, turno:topT};
+    });
+  const topDia=[...diasArr].sort((a,b)=>b.val-a.val)[0];
+  const dias=diasArr.length, prom=dias>0?totalEq/dias:0;
+  const meses=MORD.filter(m=>data.some(r=>r.mes===m));
+  const allEqT={}; EQ.forEach(e=>allEqT[e]=sum(data,e));
+
+  document.getElementById('main').innerHTML=`
+  <div class="kpi-row">
+    <div class="kpi" style="--accent:${col}">
+      <div class="kpi-label">${name} · Total</div>
+      <div class="kpi-val" style="font-size:${totalEq>=1000?'18px':'24px'}">${totalEq.toLocaleString()}<span class="kpi-unit">m³</span></div>
+      <div class="kpi-sub">${(totalG>0?totalEq/totalG*100:0).toFixed(1)}% del total · IND: ${EQIND[eq]??'-'}</div>
+    </div>
+    ${['T1','T2','T3'].map(t=>`<div class="kpi" style="--accent:${t==='T1'?'#6BBF00':t==='T2'?'#2E9E6B':'#1A7A50'}">
+      <div class="kpi-label">${t}</div>
+      <div class="kpi-val">${porT[t].toLocaleString()}<span class="kpi-unit">m³</span></div>
+      <div class="kpi-sub">${(totalEq>0?porT[t]/totalEq*100:0).toFixed(1)}% del equipo</div>
+    </div>`).join('')}
+    <div class="kpi" style="--accent:var(--red)">
+      <div class="kpi-label">Día Máximo</div>
+      <div class="kpi-val" style="font-size:14px">${topDia?topDia.fecha.slice(5).replace('-','/'):'-'}</div>
+      <div class="kpi-sub">${topDia?topDia.val+' m³':'-'}</div>
+    </div>
+    <div class="kpi" style="--accent:var(--teal)">
+      <div class="kpi-label">Promedio Diario</div>
+      <div class="kpi-val">${prom.toFixed(1)}<span class="kpi-unit">m³</span></div>
+      <div class="kpi-sub">${dias} días con datos</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card wide">
+      <div class="card-hdr"><span class="card-title" style="--accent:${col}">Tendencia Diaria – ${name} (m³)</span>
+        <span class="card-note">${diasArr.length} días</span></div>
+      <div class="chart-wrap tall"><canvas id="cEqD"></canvas></div>
+    </div>
+  </div>
+  <div class="charts-grid" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="chart-card">
+      <div class="card-hdr"><span class="card-title" style="--accent:${col}">Por Turno</span></div>
+      <div class="chart-wrap sm" style="position:relative">
+        <canvas id="cEqT"></canvas>
+        <div class="dc-center"><div class="dc-val" style="color:${col}">${fmt(totalEq)}</div><div class="dc-lbl">m³</div></div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="card-hdr"><span class="card-title" style="--accent:${col}">Por Mes</span></div>
+      <div class="chart-wrap sm"><canvas id="cEqM"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="card-hdr"><span class="card-title" style="--accent:${col}">vs Otros Equipos</span></div>
+      <div class="chart-wrap sm" style="position:relative">
+        <canvas id="cEqV"></canvas>
+        <div class="dc-center"><div class="dc-val" style="font-size:14px;color:${col}">${(totalG>0?totalEq/totalG*100:0).toFixed(1)}%</div><div class="dc-lbl">del total</div></div>
+      </div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1.8fr;gap:12px">
+    <div class="plan-card hero" style="--accent:${col}">
+      <div class="plan-badge">PR</div>
+      <div class="plan-hero-title">Plan de Reacción</div>
+      <div class="plan-hero-sub">Procedimiento ante desviaciones de consumo<br>${name}</div>
+      ${PLAN[eq]&&PLAN[eq]!=='#'
+        ? `<a class="plan-btn-hero" href="${PLAN[eq]}" target="_blank">↗ Abrir Plan</a>`
+        : `<span style="color:var(--txt3);font-size:10px;font-family:'JetBrains Mono',monospace;padding:8px 16px;border:1px dashed #3D5068;border-radius:5px;">Sin plan asignado</span>`}
+      <div class="plan-footer">SPLAN · AB InBev · ${name}</div>
+    </div>
+    <div class="plan-card">
+      <div class="plan-hdr"><span class="plan-title" style="color:${col}">⚡ Acciones de Control</span></div>
+      <div class="plan-items">${buildPlanEq(eq,col,name,totalEq,totalG,porT,topT,topDia)}</div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="card-hdr"><span class="card-title" style="--accent:${col}">Top 10 Días Mayor Consumo</span></div>
+    ${buildTopDias(diasArr,col)}
+  </div>`;
+
+  // Tendencia diaria
+  dc('ed');
+  const TCOL={'T1':'#6BBF00','T2':'#2E9E6B','T3':'#1A7A50'};
+  const indVal = EQIND[eq];
+  // Barras agrupadas por turno, color verde<=target rojo>target
+  // Tonalidades de verde por turno; rojo si supera target
+  const TGREEN = {'T1':'#6BBF00','T2':'#2E9E6B','T3':'#1A7A50'};
+  const mkDataset = (t) => {
+    const vals = diasArr.map(d=>d[t]||0);
+    const bg = vals.map(v => {
+      if(v===0) return 'transparent';
+      if(indVal && v > indVal) return '#F85149CC';
+      return TGREEN[t]+'CC';
+    });
+    return {label:t, data:vals,
+      backgroundColor:bg, borderColor:bg.map(c=>c.slice(0,7)+'FF'),
+      borderWidth:0, borderRadius:2};
+  };
+  CHARTS.ed=new Chart(document.getElementById('cEqD').getContext('2d'),{type:'bar',
+    data:{labels:diasArr.map(d=>d.fecha.slice(5)),
+      datasets:[mkDataset('T1'),mkDataset('T2'),mkDataset('T3')]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:'#8B949E',font:{family:'JetBrains Mono',size:9},usePointStyle:true,padding:12}},
+        tooltip:{...TT,mode:'index',callbacks:{
+          title:it=>it[0].label,
+          label:it=>it.raw>0?` ${it.dataset.label}: ${it.raw} m³`:null,
+          footer:items=>{
+            const tot=items.reduce((a,b)=>a+(b.raw||0),0);
+            const r=[`Total día: ${tot} m³`];
+            if(indVal) r.push(`Indicador/turno: ${indVal} m³`);
+            return tot>0?r:[];
+          }
+        }},
+        annotation: indVal ? {annotations:{
+          lineaMeta:{type:'line',yMin:indVal,yMax:indVal,
+            borderColor:'#6BBF00BB',borderWidth:1.5,borderDash:[5,4],
+            label:{content:`IND ${indVal} m³`,display:true,position:'end',
+              font:{size:9,family:'JetBrains Mono'},color:'#6BBF00',
+              backgroundColor:'rgba(10,26,46,0.85)',padding:{x:6,y:3}}}
+        }} : {}
+      },
+      scales:{
+        x:{grid:GR,ticks:{...TK,maxTicksLimit:22}},
+        y:{grid:GR,ticks:{...TK,callback:v=>v+'m³'},min:0}
+      }
+    }
+  });
+
+  // Turno donut
+  dc('et');
+  CHARTS.et=new Chart(document.getElementById('cEqT').getContext('2d'),{type:'doughnut',
+    data:{labels:['T1','T2','T3'],datasets:[{data:['T1','T2','T3'].map(t=>porT[t]),
+      backgroundColor:['#6BBF00EE','#2E9E6BEE','#1A7A50EE'],
+      borderColor:['#6BBF00','#2E9E6B','#1A7A50'],
+      borderWidth:2,hoverOffset:10,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'70%',
+      rotation:-120,circumference:300,
+      plugins:{legend:{position:'bottom',labels:{color:'#C0C8D4',font:{family:'JetBrains Mono',size:9},usePointStyle:true,padding:8}},
+        tooltip:{...TT,callbacks:{label:it=>` ${it.label}: ${it.raw} m³`}}}}});
+
+  // Mes barras
+  dc('em');
+  const mesVals=meses.map(m=>sum(data.filter(r=>r.mes===m),eq));
+  const maxM=Math.max(...mesVals);
+  CHARTS.em=new Chart(document.getElementById('cEqM').getContext('2d'),{type:'bar',
+    data:{labels:meses,datasets:[{label:name,data:mesVals,
+      backgroundColor:mesVals.map(v=>v===maxM?col:col+'44'),
+      borderColor:mesVals.map(v=>v===maxM?col:col+'88'),borderWidth:1,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:it=>` ${it.raw} m³`}}},
+      scales:{x:{grid:GR,ticks:TK},y:{grid:GR,ticks:{...TK,callback:v=>v+'m³'}}}}});
+
+  // vs otros (donut con highlight)
+  dc('ev');
+  CHARTS.ev=new Chart(document.getElementById('cEqV').getContext('2d'),{type:'doughnut',
+    data:{labels:EQ.map(e=>EQNAME[e]),datasets:[{data:EQ.map(e=>allEqT[e]),
+      backgroundColor:EQ.map(e=>e===eq?EQCOL[e]+'EE':EQCOL[e]+'22'),
+      borderColor:EQ.map(e=>e===eq?EQCOL[e]:'transparent'),borderWidth:2,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:it=>` ${it.label}: ${it.raw} m³`}}}}});
+}
+
+function buildTopDias(diasArr,col){
+  const TCOL={'T1':'#6BBF00','T2':'#2E9E6B','T3':'#1A7A50'};
+  const top=[...diasArr].sort((a,b)=>b.val-a.val).slice(0,10);
+  const maxV=top[0]?top[0].val:1;
+  let h='<div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Fecha</th><th>Turno</th><th>m³</th><th style="width:35%">Barra</th></tr></thead><tbody>';
+  top.forEach((d,i)=>{h+=`<tr>
+    <td style="color:${i<3?'#F85149':'var(--txt3)'}">${i+1}</td>
+    <td>${d.fecha}</td>
+    <td><span style="color:${TCOL[d.turno]||col};font-weight:700">${d.turno}</span></td>
+    <td style="color:${TCOL[d.turno]||col};font-weight:600">${d.val}</td>
+    <td><div style="height:7px;background:${TCOL[d.turno]||col}${i<3?'CC':'66'};border-radius:3px;width:${(d.val/maxV*100).toFixed(0)}%"></div></td>
+  </tr>`;});
+  return h+'</tbody></table></div>';
+}
+function buildPlanEq(eq,col,name,totalEq,totalG,porT,topT,topDia){
+  return [
+    {ico:'⚠️',col,t:`Consumo ${fmt(totalEq)} m³ · IND objetivo: ${EQIND[eq]??'-'}`,
+     d:`Representa el ${(totalG>0?totalEq/totalG*100:0).toFixed(1)}% del total. Verificar fugas y tiempos de operación.`},
+    {ico:'🔄',col:topT==='T3'?'#F85149':topT==='T2'?'#2D7DD2':'#6BBF00',t:`Turno ${topT} con mayor consumo`,
+     d:`${fmt(porT[topT])} m³. Comparar con turno de menor consumo e investigar diferencia.`},
+    {ico:'📈',col:'#39C5BB',t:'Día pico detectado',
+     d:`${topDia?topDia.fecha+' — '+topDia.val+' m³':'-'}. Investigar causa: paros, re-procesos o fugas.`},
+    {ico:'✅',col:'#6BBF00',t:'Acción correctiva',
+     d:'Si supera el indicador objetivo en un turno, escalar a supervisor y registrar en bitácora.'},
+  ].map(i=>`<div class="plan-item" style="--accent:${i.col}">
+    <div class="plan-ico">${i.ico}</div><div class="plan-text"><strong>${i.t}</strong><span>${i.d}</span></div>
+  </div>`).join('');
+}
+
+// ── INIT ────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
