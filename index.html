@@ -307,7 +307,10 @@ function loadExcel(input){
 
       if(parsed.length > 0){
         RAW = parsed;
-        try { await window.storage.set('agua_raw', JSON.stringify(RAW), true); } catch(e){}
+        try { 
+          await window.storage.set('agua_raw', JSON.stringify(RAW), true);
+          await window.storage.set('agua_uploaded_at', new Date().toISOString(), true);
+        } catch(e){}
         updateStatus();
         populateSemanas();
         populateFormatos();
@@ -337,8 +340,11 @@ function updateStatus(){
 // ── INIT ──────────────────────────────────────────────────────────────────
 (async function(){
   try {
+    // Check if someone manually uploaded an Excel (has upload timestamp)
+    const uploadedAt = await window.storage.get('agua_uploaded_at', true);
     const saved = await window.storage.get('agua_raw', true);
-    if(saved && saved.value){
+    if(uploadedAt && saved && saved.value){
+      // Someone uploaded manually — always use that data
       const parsed = JSON.parse(saved.value);
       if(parsed && parsed.length > 0){ RAW = parsed; }
     }
