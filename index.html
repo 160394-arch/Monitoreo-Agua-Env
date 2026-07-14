@@ -10,19 +10,61 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg0:#030C18;--bg1:#061120;--bg2:#0A1A2E;--bg3:#0F2040;
-  --blue:#1F6FEB;--green:#6BBF00;--yellow:#E3B341;--red:#F85149;--teal:#39C5BB;
-  --txt:#E6EDF3;--txt2:#8B949E;--txt3:#3D5068;--border:#1C2E40;
-  --lab:#6E2630;--past:#0074AA;--blanda:#FFB800;--lac:#800080;--bbvac:#166866;
+  --bg0:#000000;--bg1:#0A0A0C;--bg2:#131316;--bg3:#1B1B1F;
+  --blue:#2E7FEB;--green:#5FB300;--yellow:#E3B341;--red:#F04A47;--teal:#2DD4C4;
+  --txt:#F2F4F7;--txt2:#8B8F98;--txt3:#4A4E58;--border:#232327;
+  --lab:#4A6FA0;--past:#2E9683;--blanda:#C4993F;--lac:#8168AD;--bbvac:#3EA5AD;
 }
+body.light{
+  --bg0:#F4F6F9;--bg1:#FFFFFF;--bg2:#FFFFFF;--bg3:#EDF1F6;
+  --blue:#1F6FEB;--green:#3B8B00;--yellow:#B8860B;--red:#D5342B;--teal:#0E8C82;
+  --txt:#0F1A2A;--txt2:#4B5A6E;--txt3:#8493A6;--border:#D5DCE5;
+  --lab:#3B5A80;--past:#2E7D6B;--blanda:#8A6D2E;--lac:#6B5B95;--bbvac:#2E6E76;
+}
+body{transition:background .2s,color .2s;}
+.btn-theme{cursor:pointer;background:transparent;border:1px solid var(--border);color:var(--txt2);
+  font-family:'JetBrains Mono',monospace;font-size:10px;padding:9px 12px;border-radius:6px;
+  display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:700;transition:all .15s;width:100%;text-align:left;}
+.btn-theme:hover{border-color:var(--teal);color:var(--teal);background:var(--bg2);}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg0);color:var(--txt);font-family:'Barlow',sans-serif;min-height:100vh;overflow-x:hidden;}
 
+/* ── SHELL: SIDEBAR + CONTENT ── */
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:236px;flex-shrink:0;background:var(--bg1);border-right:1px solid var(--border);
+  padding:22px 16px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;
+  height:100vh;overflow-y:auto;}
+.sb-logo{margin-bottom:18px;}
+.sb-logo h1{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--txt);line-height:1.2;}
+.sb-logo p{font-size:9px;color:var(--teal);letter-spacing:1px;text-transform:uppercase;
+  font-family:'JetBrains Mono',monospace;margin-top:4px;}
+.sb-section{font-size:9px;color:var(--txt3);letter-spacing:2px;text-transform:uppercase;
+  font-family:'JetBrains Mono',monospace;margin:16px 0 8px;}
+.sb-btn{display:flex;align-items:center;width:100%;text-align:left;background:transparent;
+  border:1px solid var(--border);color:var(--txt2);font-family:'JetBrains Mono',monospace;
+  font-size:11px;padding:9px 12px;border-radius:6px;cursor:pointer;text-decoration:none;
+  transition:all .15s;margin-bottom:6px;}
+.sb-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--bg2);}
+.sb-btn.accent{border-color:#2E8B3D;color:var(--green);}
+.sb-btn.accent:hover{background:var(--bg2);}
+.sb-status{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--txt3);
+  padding:8px 0;margin-top:8px;border-top:1px solid var(--border);line-height:1.6;}
+.sb-active{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--txt3);
+  display:flex;align-items:center;margin-top:auto;padding-top:14px;}
+.content{flex:1;min-width:0;display:flex;flex-direction:column;}
+@media(max-width:820px){.sidebar{position:fixed;left:0;top:0;z-index:150;transform:translateX(-100%);
+  transition:transform .2s;box-shadow:4px 0 24px #00000060;}.sidebar.open{transform:translateX(0);}
+  .shell{display:block;}.sb-toggle{display:block !important;}}
+.sb-toggle{display:none;background:transparent;border:1px solid var(--border);color:var(--txt2);
+  font-family:'JetBrains Mono',monospace;font-size:10px;padding:6px 12px;border-radius:6px;
+  cursor:pointer;margin:6px 0;align-self:flex-start;}
+
 /* ── HEADER ROW 1 ── */
-.hdr{background:linear-gradient(135deg,#040E1C,#061726 50%,#040E1C);
+.hdr{background:var(--bg1);
   border-bottom:1px solid var(--border);
   display:flex;flex-direction:column;padding:5px 18px 4px;
-  position:sticky;top:0;z-index:100;box-shadow:0 4px 24px #00000050;}
+  position:sticky;top:0;z-index:100;box-shadow:0 1px 6px #00000030;}
 .hdr-r1{display:flex;align-items:center;gap:12px;flex-wrap:nowrap;padding-bottom:5px;}
 .hdr-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .hdr-ico{width:36px;height:36px;background:linear-gradient(135deg,#1F6FEB,#39C5BB);
@@ -40,8 +82,7 @@ body{background:var(--bg0);color:var(--txt);font-family:'Barlow',sans-serif;min-
 .btn-ul:hover{background:#0d1f33;}
 #refreshStatus{font-size:8px;font-family:'JetBrains Mono',monospace;color:#8B949E;
   padding:3px 8px;background:var(--bg3);border:1px solid #1F6FEB40;border-radius:4px;white-space:nowrap;}
-.ldot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;animation:blink 2s infinite;}
-@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;}
 
 /* ── HEADER ROW 2: FILTROS FULL WIDTH ── */
 .hdr-r2{display:flex;align-items:flex-end;gap:6px;width:100%;padding-top:4px;border-top:1px solid var(--border);}
@@ -52,41 +93,63 @@ body{background:var(--bg0);color:var(--txt);font-family:'Barlow',sans-serif;min-
   font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 8px;border-radius:5px;
   outline:none;cursor:pointer;transition:border .15s;}
 .fg select:hover,.fg input:hover,.fg select:focus{border-color:var(--blue);}
+
+.ms-dropdown{position:relative;width:100%;}
+.ms-trigger{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--txt);
+  font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 8px;border-radius:5px;
+  outline:none;cursor:pointer;transition:border .15s;text-align:left;}
+.ms-trigger:hover{border-color:var(--blue);}
+.ms-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:120;min-width:160px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px;
+  box-shadow:0 8px 24px #00000060;max-height:260px;overflow-y:auto;}
+.ms-panel.open{display:block;}
+.ms-opt{display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:4px;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt);white-space:nowrap;}
+.ms-opt:hover{background:var(--bg3);}
+.ms-opt input{cursor:pointer;accent-color:var(--teal);}
+.ms-actions{display:flex;gap:6px;margin-top:6px;}
+.ms-clear{flex:1;width:auto;margin-top:0;background:transparent;border:1px solid var(--border);color:var(--txt2);
+  font-family:'JetBrains Mono',monospace;font-size:9px;padding:5px;border-radius:4px;cursor:pointer;}
+.ms-clear:hover{border-color:var(--red);color:var(--red);}
 .btn-rst{flex-shrink:0;background:transparent;border:1px solid var(--border);color:var(--txt3);
   font-family:'JetBrains Mono',monospace;font-size:9px;padding:4px 10px;border-radius:4px;
   cursor:pointer;transition:all .15s;align-self:flex-end;}
 .btn-rst:hover{border-color:var(--red);color:var(--red);}
 
 /* ── TABS ── */
-.eq-tabs{display:flex;gap:4px;background:var(--bg1);padding:6px 18px;
-  border-bottom:1px solid var(--border);overflow-x:auto;}
-.eq-tab{padding:5px 14px;border-radius:6px;cursor:pointer;
-  font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;
-  letter-spacing:1px;text-transform:uppercase;border:1px solid transparent;
-  transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:5px;}
-.eq-tab:hover{background:var(--bg3);}
-.eq-tab.active{border-color:currentColor;background:var(--bg3);}
-.eq-tab[data-eq="ALL"]{color:var(--txt2);}
-.eq-tab[data-eq="LAB"]{color:var(--lab);}
-.eq-tab[data-eq="PAST"]{color:var(--past);}
-.eq-tab[data-eq="BLANDA"]{color:var(--blanda);}
-.eq-tab[data-eq="LAC"]{color:var(--lac);}
-.eq-tab[data-eq="BBVac"]{color:var(--bbvac);}
-.eq-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+.eq-select-box{display:flex;align-items:center;gap:8px;background:var(--bg2);
+  border:1.5px solid var(--txt2);border-radius:6px;padding:8px 12px;transition:border-color .2s;
+  width:100%;margin-bottom:6px;}
+.eq-select-dot{width:8px;height:8px;border-radius:50%;background:var(--txt2);flex-shrink:0;transition:background .2s;}
+.eq-select-box select{background:transparent;border:none;outline:none;color:var(--txt);cursor:pointer;
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;width:100%;}
+.eq-select-box select option{background:var(--bg2);color:var(--txt);}
 
 /* ── MAIN ── */
-.main{padding:12px 18px;display:flex;flex-direction:column;gap:12px;}
-.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px;}
+.main{padding:20px 24px;display:flex;flex-direction:column;gap:18px;}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;}
+
+.ref-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+.ref-card{background:linear-gradient(160deg,var(--bg2),var(--bg1));border:1px solid var(--border);
+  border-radius:9px;padding:20px 22px;border-left:3px solid var(--teal);}
+.ref-label{font-size:10px;color:var(--txt2);letter-spacing:2px;text-transform:uppercase;
+  font-family:'JetBrains Mono',monospace;margin-bottom:8px;}
+.ref-val{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:800;color:var(--txt);line-height:1;}
+.ref-unit{font-size:14px;color:var(--txt2);margin-left:4px;font-weight:600;}
+.ref-sub{font-size:10px;color:var(--txt3);margin-top:8px;font-family:'JetBrains Mono',monospace;}
+.ref-note{font-size:9px;color:var(--txt3);font-family:'JetBrains Mono',monospace;margin-top:-6px;}
+
 .kpi{background:var(--bg2);border:1px solid var(--border);border-radius:7px;
-  padding:10px 12px;position:relative;overflow:hidden;transition:transform .15s;}
+  padding:14px 16px;position:relative;overflow:hidden;transition:transform .15s;}
 .kpi:hover{transform:translateY(-1px);}
 .kpi::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent,var(--blue));}
 .kpi-label{font-size:7px;color:var(--txt3);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:4px;}
 .kpi-val{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--accent,var(--txt));line-height:1;}
 .kpi-unit{font-size:10px;color:var(--txt2);margin-left:2px;}
 .kpi-sub{font-size:8px;color:var(--txt3);margin-top:3px;font-family:'JetBrains Mono',monospace;}
-.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:12px;}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:18px;}
 .chart-card.wide{grid-column:1/-1;}
 .card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .card-title{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt2);}
@@ -128,6 +191,28 @@ tbody td{padding:4px 8px;font-family:'JetBrains Mono',monospace;font-size:9px;}
 .plan-items{display:flex;flex-direction:column;gap:7px;}
 .plan-item{display:flex;gap:8px;padding:7px;background:var(--bg3);border-radius:5px;border-left:3px solid var(--accent,var(--blue));}
 .plan-ico{font-size:14px;flex-shrink:0;margin-top:1px;}
+
+/* ── ARBOL EQUIPOS MODAL ── */
+#arbolOverlay{display:none;position:fixed;inset:0;background:rgba(3,12,24,0.85);z-index:200;
+  align-items:center;justify-content:center;padding:20px;}
+#arbolOverlay.show{display:flex;}
+#arbolBox{background:var(--bg1);border:1px solid var(--border);border-radius:10px;
+  padding:20px;max-width:960px;width:100%;max-height:90vh;overflow:auto;position:relative;}
+#arbolBox .abtn-close{position:absolute;top:12px;right:14px;background:transparent;border:1px solid var(--border);
+  color:var(--txt2);font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;}
+#arbolBox .abtn-close:hover{border-color:var(--red);color:var(--red);}
+#arbolBox h2{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;letter-spacing:2px;
+  text-transform:uppercase;color:var(--teal);margin-bottom:14px;}
+.arbol-wrap{position:relative;height:460px;min-width:920px;}
+.arbol-wrap svg.lines{position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible;}
+.acard{position:absolute;background:var(--bg2);border:1px solid var(--border);border-radius:6px;
+  padding:10px 14px;}
+.acard.root{border-color:var(--teal);border-width:1.5px;}
+.acard .albl{font-size:9px;color:var(--txt2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;}
+.acard .aval{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;color:var(--teal);line-height:1;}
+.acard.root .aval{font-size:23px;}
+.acard .asub{font-size:8px;color:var(--txt3);margin-top:4px;letter-spacing:.5px;}
+.adot{position:absolute;top:8px;right:10px;width:6px;height:6px;border-radius:50%;background:var(--teal);}
 .plan-text strong{display:block;font-size:10px;color:var(--txt);margin-bottom:2px;}
 .plan-text span{font-size:9px;color:var(--txt2);}
 .insight{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:10px;display:flex;gap:8px;}
@@ -139,27 +224,45 @@ tbody td{padding:4px 8px;font-family:'JetBrains Mono',monospace;font-size:9px;}
 </head>
 <body>
 
-<header class="hdr">
-  <!-- FILA 1: Logo | Botones | Status -->
-  <div class="hdr-r1">
-    <div class="hdr-logo">
-      <div class="hdr-ico">💧</div>
-      <div class="hdr-title">
-        <h1>Control de Consumo de Agua</h1>
-        <p>Envasado Cusco · AB InBev · 2026</p>
-      </div>
-    </div>
-    <div class="sep"></div>
-    <a class="btn-dl" href="https://anheuserbuschinbev.sharepoint.com/:x:/r/sites/pe/bo/pcuz/_layouts/15/Doc.aspx?sourcedoc=%7B3F2B7228-A017-4AC0-A81D-AC59C03E222D%7D&file=Consumo%20agua%20Envasado%202026.xlsx&action=default&mobileredirect=true" target="_blank">⬇ Descargar Excel</a>
-    <label class="btn-ul">📂 Cargar xlsx
-      <input type="file" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this)">
-    </label>
-    <span id="refreshStatus">Sin datos — carga el Excel para actualizar</span>
-    <div style="margin-left:auto;font-size:9px;font-family:'JetBrains Mono',monospace;color:#8B949E;flex-shrink:0;">
-      <span class="ldot"></span>ACTIVO
-    </div>
+<div class="shell">
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <h1>Control de Agua</h1>
+    <p>Envasado Cusco · AB InBev · 2026</p>
   </div>
-  <!-- FILA 2: FILTROS FULL WIDTH -->
+
+  <div class="sb-section">Vista</div>
+  <div class="eq-select-box" id="eqSelectBox">
+    <span class="eq-select-dot" id="eqSelectDot"></span>
+    <select id="eqSelect" onchange="selEq(this.value)">
+      <option value="ALL">General</option>
+      <option value="LAB">Lav. Botellas</option>
+      <option value="PAST">Pasteurizador</option>
+      <option value="BLANDA">Agua Blanda</option>
+      <option value="LAC">Lav. Cajas</option>
+      <option value="BBVac">Bomba Vacío</option>
+    </select>
+  </div>
+
+  <div class="sb-section">Datos</div>
+  <a class="sb-btn accent" href="https://anheuserbuschinbev.sharepoint.com/:x:/r/sites/pe/bo/pcuz/_layouts/15/Doc.aspx?sourcedoc=%7B3F2B7228-A017-4AC0-A81D-AC59C03E222D%7D&file=Consumo%20agua%20Envasado%202026.xlsx&action=default&mobileredirect=true" target="_blank">Descargar Excel</a>
+  <label class="sb-btn" style="cursor:pointer">Cargar Excel
+    <input type="file" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this)">
+  </label>
+
+  <div class="sb-section">Herramientas</div>
+  <button class="sb-btn" style="cursor:pointer" onclick="toggleArbol()">Árbol de equipos</button>
+  <a class="sb-btn" href="https://160394-arch.github.io/PI_ENVASADO_CUSCO/" target="_blank">PIs de Agua</a>
+  <button class="btn-theme" id="themeBtn" onclick="toggleTheme()">Modo oscuro</button>
+
+  <div class="sb-status" id="refreshStatus">Sin datos — carga el Excel para actualizar</div>
+  <div class="sb-active"><span class="ldot"></span>ACTIVO</div>
+</aside>
+
+<div class="content">
+<header class="hdr">
+  <button class="sb-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰ Menú</button>
+  <!-- FILTROS FULL WIDTH -->
   <div class="hdr-r2">
     <div class="fg">
       <label>Desde</label>
@@ -167,13 +270,31 @@ tbody td{padding:4px 8px;font-family:'JetBrains Mono',monospace;font-size:9px;}
     </div>
     <div class="fg">
       <label>Hasta</label>
-      <input type="date" id="fHasta" value="2026-05-31">
+      <input type="date" id="fHasta" value="2026-12-31">
     </div>
     <div class="fg">
       <label>Mes</label>
-      <select id="fMes"><option value="">Todos</option>
-        <option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option><option>Mayo</option>
-      </select>
+      <div class="ms-dropdown" id="mesDropdown">
+        <button type="button" class="ms-trigger" id="mesTrigger" onclick="toggleMesDropdown(event)">Todos</button>
+        <div class="ms-panel" id="mesPanel">
+          <label class="ms-opt"><input type="checkbox" value="Enero" onchange="onMesCheck()">Enero</label>
+          <label class="ms-opt"><input type="checkbox" value="Febrero" onchange="onMesCheck()">Febrero</label>
+          <label class="ms-opt"><input type="checkbox" value="Marzo" onchange="onMesCheck()">Marzo</label>
+          <label class="ms-opt"><input type="checkbox" value="Abril" onchange="onMesCheck()">Abril</label>
+          <label class="ms-opt"><input type="checkbox" value="Mayo" onchange="onMesCheck()">Mayo</label>
+          <label class="ms-opt"><input type="checkbox" value="Junio" onchange="onMesCheck()">Junio</label>
+          <label class="ms-opt"><input type="checkbox" value="Julio" onchange="onMesCheck()">Julio</label>
+          <label class="ms-opt"><input type="checkbox" value="Agosto" onchange="onMesCheck()">Agosto</label>
+          <label class="ms-opt"><input type="checkbox" value="Septiembre" onchange="onMesCheck()">Septiembre</label>
+          <label class="ms-opt"><input type="checkbox" value="Octubre" onchange="onMesCheck()">Octubre</label>
+          <label class="ms-opt"><input type="checkbox" value="Noviembre" onchange="onMesCheck()">Noviembre</label>
+          <label class="ms-opt"><input type="checkbox" value="Diciembre" onchange="onMesCheck()">Diciembre</label>
+          <div class="ms-actions">
+            <button type="button" class="ms-clear" onclick="selectAllMeses()">Todo</button>
+            <button type="button" class="ms-clear" onclick="clearMesSel()">Borrar</button>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="fg">
       <label>Semana</label>
@@ -184,35 +305,17 @@ tbody td{padding:4px 8px;font-family:'JetBrains Mono',monospace;font-size:9px;}
       <select id="fFmt"><option value="">Todos</option></select>
     </div>
     <div class="fg">
-      <label>Equipo</label>
-      <select id="fEq"><option value="">Todos</option>
-        <option value="LAB">Lav. Botellas</option>
-        <option value="PAST">Pasteurizador</option>
-        <option value="BLANDA">Agua Blanda</option>
-        <option value="LAC">Lav. Cajas</option>
-        <option value="BBVac">Bomba Vacío</option>
-      </select>
-    </div>
-    <div class="fg">
       <label>Turno</label>
       <select id="fTurno"><option value="">Todos</option><option>T1</option><option>T2</option><option>T3</option></select>
     </div>
-    <button class="btn-rst" onclick="resetFiltros()">↺ Limpiar</button>
+    <button class="btn-rst" onclick="resetFiltros()">Limpiar</button>
     <span id="refreshStatus2" style="margin-left:auto;font-size:8px;font-family:'JetBrains Mono',monospace;color:#8B949E;padding:3px 10px;background:var(--bg3);border:1px solid #1F6FEB40;border-radius:4px;flex-shrink:0;white-space:nowrap;"></span>
   </div>
 </header>
 
-<!-- TABS -->
-<div class="eq-tabs">
-  <div class="eq-tab active" data-eq="ALL" onclick="selTab(this,'ALL')"><div class="eq-dot" style="background:#8B949E"></div>General</div>
-  <div class="eq-tab" data-eq="LAB"    onclick="selTab(this,'LAB')"><div class="eq-dot"></div>Lav. Botellas</div>
-  <div class="eq-tab" data-eq="PAST"   onclick="selTab(this,'PAST')"><div class="eq-dot"></div>Pasteurizador</div>
-  <div class="eq-tab" data-eq="BLANDA" onclick="selTab(this,'BLANDA')"><div class="eq-dot"></div>Agua Blanda</div>
-  <div class="eq-tab" data-eq="LAC"    onclick="selTab(this,'LAC')"><div class="eq-dot"></div>Lav. Cajas</div>
-  <div class="eq-tab" data-eq="BBVac"  onclick="selTab(this,'BBVac')"><div class="eq-dot"></div>Bomba Vacío</div>
-</div>
-
 <main class="main" id="main"></main>
+</div>
+</div>
 
 <script>
 // ── DATOS ──────────────────────────────────────────────────────────────
@@ -220,7 +323,7 @@ let RAW = [{"fecha": "2026-01-02", "mes": "Enero", "sem": 1, "turno": "T1", "for
 
 const EQ     = ['LAB','PAST','BLANDA','LAC','BBVac'];
 const EQNAME = {LAB:'Lav. Botellas',PAST:'Pasteurizador',BLANDA:'Agua Blanda',LAC:'Lav. Cajas',BBVac:'Bomba Vacío'};
-const EQCOL  = {LAB:'#6E2630',PAST:'#0074AA',BLANDA:'#FFB800',LAC:'#800080',BBVac:'#166866'};
+const EQCOL  = {LAB:'#3B5A80',PAST:'#2E7D6B',BLANDA:'#A6873E',LAC:'#6B5B95',BBVac:'#3E8A94'};
 const EQIND  = {LAB:45, LAC:2, PAST:8, BLANDA:null, BBVac:5};
 const PLAN   = {
   LAB:    'https://splan.ab-inbev.com/plans/view?data=JTIyMWFkNjVjMTQtNDlmOC00NmRmLWFiNTgtYjMxOGRiOGM0MTU2JTIy',
@@ -229,9 +332,51 @@ const PLAN   = {
   BLANDA: '#',
   BBVac:  'https://splan.ab-inbev.com/plans/view?data=JTIyMTEyMGY2ODQtMzcxNy00MTJjLWFiOGItOTZkMzA2ODU5MTAwJTIy',
 };
-const MORD   = ["Enero", "Febrero", "Marzo", "Abril", "Mayo"];
+const MORD   = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 const CHARTS = {};
 let curEq = 'ALL';
+
+// ── FILTRO DE OUTLIERS (IQR independiente por cada medidor/columna) ────────
+// Se aplica tanto a datos recién parseados de Excel como a datos ya
+// almacenados en JSONBin (por si quedaron guardados sucios de una carga previa).
+function limpiarOutliers(arr){
+  const iqrBounds = (vals) => {
+    if(vals.length < 4) return {lower:-Infinity, upper:Infinity};
+    const s = [...vals].sort((a,b)=>a-b);
+    const idx = (p) => {
+      const pos = p*(s.length-1);
+      const lo = Math.floor(pos), hi = Math.ceil(pos);
+      return lo===hi ? s[lo] : s[lo] + (s[hi]-s[lo])*(pos-lo);
+    };
+    const q1 = idx(0.25), q3 = idx(0.75);
+    const iqr = q3 - q1;
+    return {lower: q1 - 1.5*iqr, upper: q3 + 1.5*iqr};
+  };
+  const OUTCOLS = ['LAB','PAST','BLANDA','LAC','BBVac'];
+  const bounds = {};
+  OUTCOLS.forEach(c => {
+    bounds[c] = iqrBounds(arr.map(r=>r[c]).filter(v=>v>0));
+  });
+
+  let outliersRemoved = 0;
+  const detalle = [];
+  arr.forEach(r => {
+    OUTCOLS.forEach(c => {
+      const v = r[c];
+      if(v > 0 && (v < bounds[c].lower || v > bounds[c].upper)){
+        detalle.push({fecha:r.fecha, turno:r.turno, col:c, val:v});
+        r[c] = 0;
+        outliersRemoved++;
+      }
+    });
+    r.total = OUTCOLS.reduce((a,c) => a + r[c], 0);
+  });
+  for(let i=arr.length-1; i>=0; i--){
+    if(arr[i].total === 0) arr.splice(i,1);
+  }
+  console.log(`[Outliers] ${outliersRemoved} valores anulados (IQR)`, bounds, detalle);
+  return arr;
+}
 
 // ── CARGA EXCEL ──────────────────────────────────────────────────────────
 function loadExcel(input){
@@ -305,6 +450,8 @@ function loadExcel(input){
         parsed.push({fecha:fv, mes, sem, turno, formato, LAB:lab, PAST:past, BLANDA:blanda, LAC:lac, BBVac:bbvac, total});
       }
 
+      // Outliers: se usa el dato del Excel tal cual, sin filtrar (a pedido del usuario)
+
       if(parsed.length > 0){
         RAW = parsed;
         // Save to JSONBin so all users see the same data
@@ -328,7 +475,7 @@ function updateStatus(){
   const ultima = fechas.length > 0 ? fechas[fechas.length-1] : null;
   const primera = fechas.length > 0 ? fechas[0] : null;
   const st = RAW.length > 0
-    ? `📅 ${primera} → <b style="color:#6BBF00">${ultima}</b> &nbsp;|&nbsp; ${RAW.length} reg.`
+    ? `${primera} → <b style="color:#6BBF00">${ultima}</b> &nbsp;|&nbsp; ${RAW.length} reg.`
     : 'Sin datos — carga el Excel para actualizar';
   const s1 = document.getElementById('refreshStatus');
   const s2 = document.getElementById('refreshStatus2');
@@ -366,8 +513,8 @@ async function jbinWrite(data, lastFecha){
   // Show loading state
   const s1 = document.getElementById('refreshStatus');
   const s2 = document.getElementById('refreshStatus2');
-  if(s1) s1.innerHTML = '🔄 Cargando datos...';
-  if(s2) s2.innerHTML = '🔄 Cargando datos...';
+  if(s1) s1.innerHTML = 'Cargando datos...';
+  if(s2) s2.innerHTML = 'Cargando datos...';
 
   // Try to load from JSONBin FIRST before rendering
   const saved = await jbinRead();
@@ -378,44 +525,133 @@ async function jbinWrite(data, lastFecha){
   updateStatus();
   populateFormatos();
   populateSemanas();
+  // Seguro: si el navegador restauró checkboxes de mes marcados sin disparar 'change',
+  // esto garantiza que Desde/Hasta arranquen sincronizados con lo que esté realmente marcado.
+  if(typeof updateMesTrigger==='function'){ updateMesTrigger(); syncFechasAMes(); populateSemanas(); }
   render();
 })();
 
-function selTab(el,eq){
-  document.querySelectorAll('.eq-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active'); curEq=eq; render();
+function selEq(eq){
+  curEq = eq;
+  const box = document.getElementById('eqSelectBox');
+  const dot = document.getElementById('eqSelectDot');
+  const color = eq==='ALL' ? '#8B949E' : EQCOL[eq];
+  box.style.borderColor = color;
+  dot.style.background = color;
+  render();
 }
-['fMes','fSem','fTurno','fFmt','fEq','fDesde','fHasta'].forEach(id=>
-  document.getElementById(id).addEventListener('change',()=>{if(id==='fMes')populateSemanas();render();})
+document.getElementById('fSem').addEventListener('change',()=>{ syncFechasASemana(); render(); });
+['fTurno','fFmt','fDesde','fHasta'].forEach(id=>
+  document.getElementById(id).addEventListener('change',render)
 );
 populateSemanas(); populateFormatos();
 
+// ── DROPDOWN MULTI-SELECT DE MESES ──────────────────────────────────────
+function getMesSel(){
+  return [...document.querySelectorAll('#mesPanel input:checked')].map(i=>i.value);
+}
+function toggleMesDropdown(ev){
+  ev.stopPropagation();
+  document.getElementById('mesPanel').classList.toggle('open');
+}
+document.addEventListener('click',(ev)=>{
+  const dd = document.getElementById('mesDropdown');
+  if(dd && !dd.contains(ev.target)){
+    const panel = document.getElementById('mesPanel');
+    if(panel.classList.contains('open')){
+      panel.classList.remove('open');
+      // Seguro final: re-sincroniza fechas con lo que esté REALMENTE marcado al cerrar,
+      // por si algún checkbox quedó en un estado que no disparó 'change' (ej. restaurado por el navegador).
+      updateMesTrigger();
+      syncFechasAMes();
+      populateSemanas();
+      render();
+    }
+  }
+});
+function updateMesTrigger(){
+  const sel = getMesSel();
+  const btn = document.getElementById('mesTrigger');
+  if(sel.length===0) btn.textContent = 'Todos';
+  else if(sel.length<=2) btn.textContent = sel.join(', ');
+  else btn.textContent = sel.length + ' meses';
+}
+function onMesCheck(){
+  updateMesTrigger();
+  syncFechasAMes();
+  populateSemanas();
+  render();
+}
+function selectAllMeses(){
+  document.querySelectorAll('#mesPanel input[type=checkbox]').forEach(i=>i.checked=true);
+  onMesCheck();
+}
+function clearMesSel(){
+  document.querySelectorAll('#mesPanel input:checked').forEach(i=>i.checked=false);
+  onMesCheck();
+}
+
+// ── SINCRONIZACIÓN FECHAS ↔ MES/SEMANA ──────────────────────────────────
+// Evita que "Mes"/"Semana" choquen en silencio con un rango Desde/Hasta que no los cubre.
+function fechaRango(rows){
+  const fechas = rows.map(r=>r.fecha).sort();
+  if(fechas.length===0) return null;
+  return {min: fechas[0], max: fechas[fechas.length-1]};
+}
+function syncFechasAMes(){
+  const mesSel = getMesSel();
+  const rows = mesSel.length ? RAW.filter(r=>mesSel.includes(r.mes)) : RAW;
+  const rango = fechaRango(rows);
+  if(!rango) return;
+  document.getElementById('fDesde').value = rango.min;
+  document.getElementById('fHasta').value = rango.max;
+}
+function syncFechasASemana(){
+  const mesSel = getMesSel();
+  const sem = document.getElementById('fSem').value;
+  let rows = mesSel.length ? RAW.filter(r=>mesSel.includes(r.mes)) : RAW;
+  if(sem) rows = rows.filter(r=>r.sem==sem);
+  const rango = fechaRango(rows);
+  if(!rango) return;
+  document.getElementById('fDesde').value = rango.min;
+  document.getElementById('fHasta').value = rango.max;
+}
+
 // ── FILTROS ──────────────────────────────────────────────────────────────
 function gf(){
-  const mes   = document.getElementById('fMes').value;
+  const mesSel = getMesSel();
   const sem   = document.getElementById('fSem').value;
   const turno = document.getElementById('fTurno').value;
   const fmt   = document.getElementById('fFmt').value;
-  const eq    = document.getElementById('fEq').value;
-  const desde = document.getElementById('fDesde').value;
-  const hasta = document.getElementById('fHasta').value;
+
+  // El rango de fechas efectivo SIEMPRE se recalcula en vivo a partir de mes/semana
+  // seleccionados (no se confía en el valor de los inputs, que podría haber quedado
+  // desincronizado). Si no hay mes/semana elegidos, sí se usa el rango manual de los inputs.
+  let desde = document.getElementById('fDesde').value;
+  let hasta = document.getElementById('fHasta').value;
+  if(mesSel.length || sem){
+    let rows = mesSel.length ? RAW.filter(r=>mesSel.includes(r.mes)) : RAW;
+    if(sem) rows = rows.filter(r=>r.sem==sem);
+    const rango = fechaRango(rows);
+    if(rango){ desde = rango.min; hasta = rango.max; }
+  }
+
   return RAW.filter(r =>
     r.total > 0 &&
     (!desde  || r.fecha >= desde) &&
     (!hasta  || r.fecha <= hasta) &&
-    (!mes    || r.mes === mes) &&
+    (!mesSel.length || mesSel.includes(r.mes)) &&
     (!sem    || r.sem == sem) &&
     (!turno  || r.turno === turno) &&
-    (!fmt    || r.formato === fmt) &&
-    (!eq     || r[eq] > 0)
+    (!fmt    || r.formato === fmt)
   );
 }
 function populateSemanas(){
-  const mes = document.getElementById('fMes').value;
+  const mesSel = getMesSel();
   const sel = document.getElementById('fSem');
   const cur = sel.value;
   while(sel.options.length > 1) sel.remove(1);
-  [...new Set(RAW.filter(r => !mes || r.mes === mes).map(r => r.sem))].sort((a,b)=>a-b).forEach(s=>{
+  [...new Set(RAW.filter(r => !mesSel.length || mesSel.includes(r.mes)).map(r => r.sem))].sort((a,b)=>a-b).forEach(s=>{
     const o = document.createElement('option'); o.value = s; o.text = 'Sem ' + s; sel.appendChild(o);
   });
   if([...sel.options].some(o => o.value == cur)) sel.value = cur;
@@ -430,7 +666,9 @@ function populateFormatos(){
   if([...sel.options].some(o => o.value === cur)) sel.value = cur;
 }
 function resetFiltros(){
-  ['fMes','fSem','fTurno','fFmt','fEq'].forEach(id => document.getElementById(id).value = '');
+  document.querySelectorAll('#mesPanel input:checked').forEach(i=>i.checked=false);
+  updateMesTrigger();
+  ['fSem','fTurno','fFmt'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('fDesde').value = '2026-01-01';
   document.getElementById('fHasta').value = '2026-12-31';
   populateSemanas();
@@ -440,12 +678,74 @@ function resetFiltros(){
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
 function dc(id){if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id];}}
+function toggleArbol(){
+  document.getElementById('arbolOverlay').classList.toggle('show');
+}
+function applyTheme(mode){
+  const btn = document.getElementById('themeBtn');
+  if(mode==='light'){
+    document.body.classList.add('light');
+    if(btn) btn.innerHTML = 'Modo claro';
+  } else {
+    document.body.classList.remove('light');
+    if(btn) btn.innerHTML = 'Modo oscuro';
+  }
+}
+function toggleTheme(){
+  const isLight = document.body.classList.contains('light');
+  const next = isLight ? 'dark' : 'light';
+  applyTheme(next);
+  try{ localStorage.setItem('themePref', next); }catch(e){}
+  render();
+}
+(function(){
+  let saved = null;
+  try{ saved = localStorage.getItem('themePref'); }catch(e){}
+  applyTheme(saved || 'dark');
+})();
 function sum(arr,k){return arr.reduce((a,r)=>a+(r[k]||0),0);}
 function fmt(n){return n>=1000?(n/1000).toFixed(1)+'k':n.toFixed(0);}
 const TT={backgroundColor:'#0F2040',borderColor:'#1C2E40',borderWidth:1,titleColor:'#8B949E',bodyColor:'#E6EDF3',
   titleFont:{family:'JetBrains Mono',size:9},bodyFont:{family:'JetBrains Mono',size:10},padding:10};
-const GR={color:'rgba(255,255,255,0.04)',drawBorder:false};
+const GR={color:'rgba(128,140,160,0.12)',drawBorder:false};
 const TK={color:'#3D5068',font:{family:'JetBrains Mono',size:9}};
+
+// ── TOTALES DE REFERENCIA (día/semana/mes) — reutilizable en todas las vistas ──
+// key: 'total' para General, o el código de equipo (LAB/PAST/BLANDA/LAC/BBVac)
+function calcRefTotals(key){
+  const rows = RAW.filter(r=>r[key]>0);
+  const allDates=[...new Set(rows.map(r=>r.fecha))].sort();
+  const lastFecha=allDates[allDates.length-1]||null;
+  const totalDia=lastFecha?sum(rows.filter(r=>r.fecha===lastFecha),key):0;
+  const last7=allDates.slice(-7);
+  const totalSemana=sum(rows.filter(r=>last7.includes(r.fecha)),key);
+  const lastRow=lastFecha?rows.find(r=>r.fecha===lastFecha):null;
+  const lastMes=lastRow?lastRow.mes:null;
+  const totalMes=lastMes?sum(rows.filter(r=>r.mes===lastMes),key):0;
+  return {totalDia,totalSemana,totalMes,lastFecha,last7,lastMes};
+}
+function buildRefRow(key){
+  const r = calcRefTotals(key);
+  return `
+  <div class="ref-row">
+    <div class="ref-card">
+      <div class="ref-label">Total del día</div>
+      <div class="ref-val">${r.totalDia.toLocaleString()}<span class="ref-unit">m³</span></div>
+      <div class="ref-sub">${r.lastFecha||'sin datos'}</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-label">Total de la semana</div>
+      <div class="ref-val">${r.totalSemana.toLocaleString()}<span class="ref-unit">m³</span></div>
+      <div class="ref-sub">${r.last7[0]||''} — ${r.lastFecha||''}</div>
+    </div>
+    <div class="ref-card">
+      <div class="ref-label">Total del mes</div>
+      <div class="ref-val">${r.totalMes.toLocaleString()}<span class="ref-unit">m³</span></div>
+      <div class="ref-sub">${r.lastMes||'sin datos'}</div>
+    </div>
+  </div>
+  <div class="ref-note">Estos 3 totales son siempre los más recientes registrados — no cambian con los filtros de arriba.</div>`;
+}
 
 // ── RENDER ────────────────────────────────────────────────────────────────
 function render(){ curEq==='ALL'?renderGeneral(gf()):renderEq(gf(),curEq); }
@@ -466,62 +766,27 @@ function renderGeneral(data){
   const meses=MORD.filter(m=>data.some(r=>r.mes===m));
 
   document.getElementById('main').innerHTML=`
-  <div class="kpi-row">
-    <div class="kpi" style="--accent:var(--blue)">
-      <div class="kpi-label">Consumo Total</div>
-      <div class="kpi-val">${totalG.toLocaleString()}<span class="kpi-unit">m³</span></div>
-      <div class="kpi-sub">${dias} días · ${meses.length} meses</div>
-    </div>
-    ${EQ.map(e=>`<div class="kpi" style="--accent:${EQCOL[e]}">
-      <div class="kpi-label">${EQNAME[e]}</div>
-      <div class="kpi-val" style="font-size:${eqT[e]>=1000?'18px':'24px'}">${eqT[e].toLocaleString()}<span class="kpi-unit">m³</span></div>
-      <div class="kpi-sub">${totalG>0?(eqT[e]/totalG*100).toFixed(1):0}% · IND:${EQIND[e]??'-'}</div>
-    </div>`).join('')}
+  ${buildRefRow('total')}
 
-    <div class="kpi" style="--accent:var(--teal)">
-      <div class="kpi-label">Promedio Diario</div>
-      <div class="kpi-val">${prom.toFixed(1)}<span class="kpi-unit">m³</span></div>
-      <div class="kpi-sub">m³/día</div>
-    </div>
-  </div>
-
-  <!-- Pareto + Distribución + Turnos -->
-  <div class="charts-grid" style="grid-template-columns:1.4fr 1fr 1fr">
-    <div class="chart-card">
+  <!-- Pareto -->
+  <div class="charts-grid">
+    <div class="chart-card wide">
       <div class="card-hdr"><span class="card-title" style="--accent:var(--blue)">Pareto por Equipo</span><span class="card-note">% acumulado</span></div>
       <div class="chart-wrap"><canvas id="cPareto"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="card-hdr"><span class="card-title" style="--accent:var(--yellow)">Distribución por Equipo</span></div>
-      <div class="chart-wrap" style="position:relative">
-        <canvas id="cDonut"></canvas>
-        <div class="dc-center" id="cDonut_val"><div class="dc-val">${totalG.toLocaleString()}</div><div class="dc-lbl">m³ total</div></div>
-      </div>
-    </div>
-    <div class="chart-card">
-      <div class="card-hdr"><span class="card-title" style="--accent:var(--teal)">Distribución por Turno</span></div>
-      <div class="chart-wrap" style="position:relative">
-        <canvas id="cTurno"></canvas>
-        <div class="dc-center"><div class="dc-val">${['T1','T2','T3'].length}</div><div class="dc-lbl">turnos</div></div>
-      </div>
     </div>
   </div>
 
   <!-- Tendencia mensual -->
   <div class="charts-grid">
     <div class="chart-card wide">
-      <div class="card-hdr"><span class="card-title" style="--accent:var(--teal)">Tendencia Mensual por Equipo (m³)</span><span class="card-note">Ene–May 2026</span></div>
+      <div class="card-hdr"><span class="card-title" style="--accent:var(--teal)">Tendencia Mensual por Equipo (m³)</span><span class="card-note">${meses[0]||''} – ${meses[meses.length-1]||''} 2026</span></div>
       <div class="chart-wrap"><canvas id="cTend"></canvas></div>
     </div>
   </div>
 
-  <!-- Turno x Equipo + Tabla mes -->
+  <!-- Tabla mes -->
   <div class="charts-grid">
-    <div class="chart-card">
-      <div class="card-hdr"><span class="card-title" style="--accent:var(--green)">Consumo Turno × Equipo</span></div>
-      <div class="chart-wrap"><canvas id="cTxE"></canvas></div>
-    </div>
-    <div class="chart-card">
+    <div class="chart-card wide">
       <div class="card-hdr"><span class="card-title" style="--accent:var(--red)">Resumen por Mes</span></div>
       <div style="max-height:250px;overflow-y:auto">${buildTblMes(data)}</div>
     </div>
@@ -535,10 +800,7 @@ function renderGeneral(data){
 
   setTimeout(()=>{
     drawPareto(eqT,totalG);
-    drawDonut(eqT,totalG,'cDonut');
-    drawTurnoDonut(porT,totalG);
     drawTend(data);
-    drawTxE(data);
   },0);
 }
 
@@ -626,25 +888,25 @@ function buildTblMes(data){
 }
 function buildPlanG(data,eqT,total,porT,topEq,topT){
   return [
-    {ico:'⚠️',col:EQCOL[topEq],t:`${EQNAME[topEq]}: equipo crítico (IND: ${EQIND[topEq]??'-'})`,
+    {col:EQCOL[topEq],t:`${EQNAME[topEq]}: equipo crítico (IND: ${EQIND[topEq]??'-'})`,
      d:`${fmt(eqT[topEq])} m³ · ${(eqT[topEq]/total*100).toFixed(1)}% del total. Auditar fugas y tiempos de ciclo.`},
-    {ico:'🔄',col:topT==='T3'?'#F85149':topT==='T2'?'#2D7DD2':'#6BBF00',t:`Turno ${topT} con mayor consumo`,
+    {col:topT==='T3'?'#F85149':topT==='T2'?'#2D7DD2':'#6BBF00',t:`Turno ${topT} con mayor consumo`,
      d:`${fmt(porT[topT])} m³ (${(porT[topT]/total*100).toFixed(1)}%). Revisar procedimientos operativos.`},
-    {ico:'💧',col:'#39C5BB',t:'Monitoreo continuo',d:'Registrar medidor inicio/fin de cada turno. Alertar si supera promedio en 20%.'},
-    {ico:'📋',col:'#A371F7',t:'Registro y acciones',d:'Documentar hallazgos por turno. Comparar consumo real vs indicador objetivo.'},
+    {col:'#39C5BB',t:'Monitoreo continuo',d:'Registrar medidor inicio/fin de cada turno. Alertar si supera promedio en 20%.'},
+    {col:'#A371F7',t:'Registro y acciones',d:'Documentar hallazgos por turno. Comparar consumo real vs indicador objetivo.'},
   ].map(i=>`<div class="plan-item" style="--accent:${i.col}">
-    <div class="plan-ico">${i.ico}</div><div class="plan-text"><strong>${i.t}</strong><span>${i.d}</span></div>
+    <div class="plan-text"><strong>${i.t}</strong><span>${i.d}</span></div>
   </div>`).join('');
 }
 function buildInsights(data,eqT,total,porT,topEq,topT){
   const meses=MORD.filter(m=>data.some(r=>r.mes===m));
   const topMes=meses.map(m=>({m,t:sum(data.filter(r=>r.mes===m),'total')})).sort((a,b)=>b.t-a.t)[0];
   return [
-    {ico:'🏭',t:'Equipo crítico',d:`${EQNAME[topEq]} con ${fmt(eqT[topEq])} m³ (${(eqT[topEq]/total*100).toFixed(1)}%). Mayor oportunidad de ahorro.`},
-    {ico:'🌊',t:'Agua Blanda domina',d:`${(eqT['BLANDA']/total*100).toFixed(1)}% del total. Optimizar ciclos y caudales.`},
-    {ico:'📅',t:'Mes pico',d:`${topMes?topMes.m+' con '+fmt(topMes.t)+' m³':'-'}. Correlacionar con campañas.`},
-    {ico:'⚙️',t:'Turno mayor',d:`${topT} con ${fmt(porT[topT])} m³. Revisar prácticas en ese turno.`},
-  ].map(i=>`<div class="insight"><div class="ins-ico">${i.ico}</div><div class="ins-text"><strong>${i.t}</strong><span>${i.d}</span></div></div>`).join('');
+    {t:'Equipo crítico',d:`${EQNAME[topEq]} con ${fmt(eqT[topEq])} m³ (${(eqT[topEq]/total*100).toFixed(1)}%). Mayor oportunidad de ahorro.`},
+    {t:'Agua Blanda domina',d:`${(eqT['BLANDA']/total*100).toFixed(1)}% del total. Optimizar ciclos y caudales.`},
+    {t:'Mes pico',d:`${topMes?topMes.m+' con '+fmt(topMes.t)+' m³':'-'}. Correlacionar con campañas.`},
+    {t:'Turno mayor',d:`${topT} con ${fmt(porT[topT])} m³. Revisar prácticas en ese turno.`},
+  ].map(i=>`<div class="insight"><div class="ins-text"><strong>${i.t}</strong><span>${i.d}</span></div></div>`).join('');
 }
 
 // ══════════════════════════════════════════════════════
@@ -675,28 +937,7 @@ function renderEq(data,eq){
   const allEqT={}; EQ.forEach(e=>allEqT[e]=sum(data,e));
 
   document.getElementById('main').innerHTML=`
-  <div class="kpi-row">
-    <div class="kpi" style="--accent:${col}">
-      <div class="kpi-label">${name} · Total</div>
-      <div class="kpi-val" style="font-size:${totalEq>=1000?'18px':'24px'}">${totalEq.toLocaleString()}<span class="kpi-unit">m³</span></div>
-      <div class="kpi-sub">${(totalG>0?totalEq/totalG*100:0).toFixed(1)}% del total · IND: ${EQIND[eq]??'-'}</div>
-    </div>
-    ${['T1','T2','T3'].map(t=>`<div class="kpi" style="--accent:${t==='T1'?'#6BBF00':t==='T2'?'#2E9E6B':'#1A7A50'}">
-      <div class="kpi-label">${t}</div>
-      <div class="kpi-val">${porT[t].toLocaleString()}<span class="kpi-unit">m³</span></div>
-      <div class="kpi-sub">${(totalEq>0?porT[t]/totalEq*100:0).toFixed(1)}% del equipo</div>
-    </div>`).join('')}
-    <div class="kpi" style="--accent:var(--red)">
-      <div class="kpi-label">Día Máximo</div>
-      <div class="kpi-val" style="font-size:14px">${topDia?topDia.fecha.slice(5).replace('-','/'):'-'}</div>
-      <div class="kpi-sub">${topDia?topDia.val+' m³':'-'}</div>
-    </div>
-    <div class="kpi" style="--accent:var(--teal)">
-      <div class="kpi-label">Promedio Diario</div>
-      <div class="kpi-val">${prom.toFixed(1)}<span class="kpi-unit">m³</span></div>
-      <div class="kpi-sub">${dias} días con datos</div>
-    </div>
-  </div>
+  ${buildRefRow(eq)}
 
   <div class="charts-grid">
     <div class="chart-card wide">
@@ -736,13 +977,9 @@ function renderEq(data,eq){
       <div class="plan-footer">SPLAN · AB InBev · ${name}</div>
     </div>
     <div class="plan-card">
-      <div class="plan-hdr"><span class="plan-title" style="color:${col}">⚡ Acciones de Control</span></div>
+      <div class="plan-hdr"><span class="plan-title" style="color:${col}">Acciones de Control</span></div>
       <div class="plan-items">${buildPlanEq(eq,col,name,totalEq,totalG,porT,topT,topDia)}</div>
     </div>
-  </div>
-  <div class="chart-card">
-    <div class="card-hdr"><span class="card-title" style="--accent:${col}">Top 10 Días Mayor Consumo</span></div>
-    ${buildTopDias(diasArr,col)}
   </div>`;
 
   setTimeout(()=>{
@@ -847,20 +1084,110 @@ function buildTopDias(diasArr,col){
 }
 function buildPlanEq(eq,col,name,totalEq,totalG,porT,topT,topDia){
   return [
-    {ico:'⚠️',col,t:`Consumo ${fmt(totalEq)} m³ · IND objetivo: ${EQIND[eq]??'-'}`,
+    {col,t:`Consumo ${fmt(totalEq)} m³ · IND objetivo: ${EQIND[eq]??'-'}`,
      d:`Representa el ${(totalG>0?totalEq/totalG*100:0).toFixed(1)}% del total. Verificar fugas y tiempos de operación.`},
-    {ico:'🔄',col:topT==='T3'?'#F85149':topT==='T2'?'#2D7DD2':'#6BBF00',t:`Turno ${topT} con mayor consumo`,
+    {col:topT==='T3'?'#F85149':topT==='T2'?'#2D7DD2':'#6BBF00',t:`Turno ${topT} con mayor consumo`,
      d:`${fmt(porT[topT])} m³. Comparar con turno de menor consumo e investigar diferencia.`},
-    {ico:'📈',col:'#39C5BB',t:'Día pico detectado',
+    {col:'#39C5BB',t:'Día pico detectado',
      d:`${topDia?topDia.fecha+' — '+topDia.val+' m³':'-'}. Investigar causa: paros, re-procesos o fugas.`},
-    {ico:'✅',col:'#6BBF00',t:'Acción correctiva',
+    {col:'#6BBF00',t:'Acción correctiva',
      d:'Si supera el indicador objetivo en un turno, escalar a supervisor y registrar en bitácora.'},
   ].map(i=>`<div class="plan-item" style="--accent:${i.col}">
-    <div class="plan-ico">${i.ico}</div><div class="plan-text"><strong>${i.t}</strong><span>${i.d}</span></div>
+    <div class="plan-text"><strong>${i.t}</strong><span>${i.d}</span></div>
   </div>`).join('');
 }
 
 // (render is called by the async IIFE above)
 </script>
+<div id="arbolOverlay" onclick="if(event.target===this)toggleArbol()">
+  <div id="arbolBox">
+    <button class="abtn-close" onclick="toggleArbol()">✕ Cerrar</button>
+    <h2>│ Árbol de Equipos — Envasado</h2>
+    <div class="arbol-wrap">
+      <svg class="lines" viewBox="0 0 900 460">
+        <path d="M210 210 C250 210, 250 76, 290 76"   stroke="#1C2E40" stroke-width="1.5" fill="none"/>
+        <path d="M210 210 C250 210, 250 152,290 152"  stroke="#1C2E40" stroke-width="1.5" fill="none"/>
+        <path d="M210 210 C250 210, 250 228,290 228"  stroke="#1C2E40" stroke-width="1.5" fill="none"/>
+        <path d="M210 210 C250 210, 250 304,290 304"  stroke="#1C2E40" stroke-width="1.5" fill="none"/>
+        <path d="M210 210 C250 210, 250 380,290 380"  stroke="#1C2E40" stroke-width="1.5" fill="none"/>
+
+        <path d="M480 76  C520 76, 520 55, 560 55"   stroke="#39C5BB" stroke-width="1.2" fill="none" opacity="0.5"/>
+        <path d="M480 76  C520 76, 520 120,560 120"  stroke="#39C5BB" stroke-width="1.2" fill="none" opacity="0.5"/>
+        <path d="M480 152 C520 152,520 120,560 120"  stroke="#39C5BB" stroke-width="1.2" fill="none" opacity="0.8"/>
+        <path d="M480 152 C520 152,520 185,560 185"  stroke="#39C5BB" stroke-width="1.2" fill="none" opacity="0.5"/>
+        <path d="M480 380 C520 380,520 380,560 380"  stroke="#39C5BB" stroke-width="1.2" fill="none" opacity="0.6"/>
+      </svg>
+
+      <div class="acard root" style="left:20px; top:175px; width:190px;">
+        <div class="adot"></div>
+        <div class="albl">Área</div>
+        <div class="aval">Envasado</div>
+      </div>
+
+      <div class="acard" style="left:290px; top:48px; width:190px;">
+        <div class="adot"></div>
+        <div class="albl">Equipo</div>
+        <div class="aval">Llenadoras</div>
+        <div class="asub">Bomba Vacío + Blanda*</div>
+      </div>
+
+      <div class="acard" style="left:290px; top:124px; width:190px;">
+        <div class="adot"></div>
+        <div class="albl">Equipo</div>
+        <div class="aval">Lav. Botellas</div>
+        <div class="asub">Lav. Botellas + Blanda*</div>
+      </div>
+
+      <div class="acard" style="left:290px; top:200px; width:190px;">
+        <div class="adot"></div>
+        <div class="albl">Equipo</div>
+        <div class="aval">Pasteurizador</div>
+        <div class="asub">medidor propio</div>
+      </div>
+
+      <div class="acard" style="left:290px; top:276px; width:190px;">
+        <div class="adot"></div>
+        <div class="albl">Equipo</div>
+        <div class="aval">Lav. Cajas</div>
+        <div class="asub">medidor propio</div>
+      </div>
+
+      <div class="acard" style="left:290px; top:352px; width:190px;">
+        <div class="adot"></div>
+        <div class="albl">Equipo</div>
+        <div class="aval">Otros</div>
+        <div class="asub">sin medidor digital</div>
+      </div>
+
+      <div class="acard" style="left:560px; top:30px; width:170px;">
+        <div class="adot"></div>
+        <div class="albl">Medidor</div>
+        <div class="aval" style="font-size:15px">Bomba Vacío</div>
+      </div>
+
+      <div class="acard" style="left:560px; top:95px; width:170px;">
+        <div class="adot"></div>
+        <div class="albl">Medidor (compartido)*</div>
+        <div class="aval" style="font-size:15px">Agua Blanda</div>
+      </div>
+
+      <div class="acard" style="left:560px; top:160px; width:170px;">
+        <div class="adot"></div>
+        <div class="albl">Medidor</div>
+        <div class="aval" style="font-size:15px">Lav. Botellas</div>
+      </div>
+
+      <div class="acard" style="left:560px; top:355px; width:170px;">
+        <div class="albl">Sin medidor</div>
+        <div class="aval" style="font-size:15px;color:var(--txt2)">Mangueras</div>
+      </div>
+
+      <div style="position:absolute; left:20px; top:420px; font-size:10px; color:var(--txt3); letter-spacing:.5px;">
+        * Agua Blanda: mayor parte a Lav. Botellas, menor parte a Llenadoras · Mangueras sin medidor digital, agrupado en "Otros"
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
